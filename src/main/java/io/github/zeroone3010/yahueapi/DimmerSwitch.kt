@@ -1,10 +1,10 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-public interface DimmerSwitch extends Sensor {
+interface DimmerSwitch : Sensor {
   /**
    * The latest button event of this switch.
    *
-   * @return {@code true} if presence detected, {@code false} if not.
+   * @return `true` if presence detected, `false` if not.
    */
-  DimmerSwitchButtonEvent getLatestButtonEvent();
+  val latestButtonEvent: DimmerSwitchButtonEvent
 }

@@ -1,23 +1,14 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty
 
-public class ConfigBackup {
+class ConfigBackup {
   @JsonProperty("status")
-  private String status;
+  val status: String? = null
   @JsonProperty("errorcode")
-  private int errorCode;
+  val errorCode: Int = 0
 
-  public String getStatus() {
-    return status;
-  }
-
-  public int getErrorCode() {
-    return errorCode;
-  }
-
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

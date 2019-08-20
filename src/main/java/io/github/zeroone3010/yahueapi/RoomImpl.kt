@@ -1,81 +1,49 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import io.github.zeroone3010.yahueapi.StateBuilderSteps.BrightnessStep;
-import io.github.zeroone3010.yahueapi.domain.Group;
-import io.github.zeroone3010.yahueapi.domain.GroupState;
+import io.github.zeroone3010.yahueapi.StateBuilderSteps.BrightnessStep
+import io.github.zeroone3010.yahueapi.domain.Group
+import io.github.zeroone3010.yahueapi.domain.GroupState
+import java.util.logging.Logger
 
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.logging.Logger;
+internal class RoomImpl(group: Group,
+                        override val lights: Set<Light>,
+                        private val stateProvider: () -> GroupState?,
+                        private val stateSetter: (State) -> String) : Room {
+  override val name: String?
 
-final class RoomImpl implements Room {
-  private static final Logger logger = Logger.getLogger("RoomImpl");
+  override val isAnyOn: Boolean
+    get() = groupState.isAnyOn
 
-  private final Set<Light> lights;
-  private final String name;
-  private final Supplier<GroupState> stateProvider;
-  private final Function<State, String> stateSetter;
+  override val isAllOn: Boolean
+    get() = groupState.isAllOn
 
-  RoomImpl(final Group group,
-           final Set<Light> lights,
-           final Supplier<GroupState> stateProvider,
-           final Function<State, String> stateSetter) {
-    this.stateProvider = stateProvider;
-    this.stateSetter = stateSetter;
-    this.lights = lights;
-    this.name = group.getName();
+  private val groupState: GroupState
+    get() = stateProvider.invoke()!!
+
+  init {
+    this.name = group.name
   }
 
-  @Override
-  public String getName() {
-    return name;
+  override fun getLightByName(lightName: String): Light? {
+    return lights.firstOrNull { light -> light.name == lightName }
   }
 
-  @Override
-  public Collection<Light> getLights() {
-    return lights;
+  override fun setState(state: State) {
+    val result = stateSetter.invoke(state)
+    logger.fine(result)
   }
 
-  @Override
-  public Optional<Light> getLightByName(final String lightName) {
-    return lights.stream()
-        .filter(light -> Objects.equals(light.getName(), lightName))
-        .findFirst();
+  override fun setBrightness(brightness: Int) {
+    setState((State.builder() as BrightnessStep).brightness(brightness).keepCurrentState())
   }
 
-  @Override
-  public boolean isAnyOn() {
-    return getGroupState().isAnyOn();
-  }
-
-  @Override
-  public boolean isAllOn() {
-    return getGroupState().isAllOn();
-  }
-
-  @Override
-  public void setState(final State state) {
-    final String result = stateSetter.apply(state);
-    logger.fine(result);
-  }
-
-  @Override
-  public void setBrightness(final int brightness) {
-    setState(((BrightnessStep) State.builder()).brightness(brightness).keepCurrentState());
-  }
-
-  private GroupState getGroupState() {
-    return stateProvider.get();
-  }
-
-  @Override
-  public String toString() {
+  override fun toString(): String {
     return "Room{" +
-        "name='" + name + '\'' +
-        '}';
+        "name='" + name + '\''.toString() +
+        '}'.toString()
+  }
+
+  companion object {
+    private val logger = Logger.getLogger("RoomImpl")
   }
 }

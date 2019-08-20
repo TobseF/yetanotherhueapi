@@ -1,31 +1,16 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty
 
-import java.util.Map;
-
-public class RuleAction {
+class RuleAction {
   @JsonProperty("address")
-  private String address;
+  val address: String? = null
   @JsonProperty("method")
-  private String method;
+  val method: String? = null
   @JsonProperty("body")
-  private Map<String, Object> body;
+  val body: Map<String, Any>? = null
 
-  public String getAddress() {
-    return address;
-  }
-
-  public String getMethod() {
-    return method;
-  }
-
-  public Map<String, Object> getBody() {
-    return body;
-  }
-
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

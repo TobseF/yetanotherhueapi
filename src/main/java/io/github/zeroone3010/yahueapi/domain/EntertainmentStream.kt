@@ -1,35 +1,18 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty
 
-public class EntertainmentStream {
+class EntertainmentStream {
   @JsonProperty("proxymode")
-  private String proxyMode;
+  val proxyMode: String? = null
   @JsonProperty("proxynode")
-  private String proxyNode;
+  val proxyNode: String? = null
   @JsonProperty("active")
-  private boolean active;
+  val isActive: Boolean = false
   @JsonProperty("owner")
-  private String owner;
+  val owner: String? = null
 
-  public String getProxyMode() {
-    return proxyMode;
-  }
-
-  public String getProxyNode() {
-    return proxyNode;
-  }
-
-  public boolean isActive() {
-    return active;
-  }
-
-  public String getOwner() {
-    return owner;
-  }
-
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

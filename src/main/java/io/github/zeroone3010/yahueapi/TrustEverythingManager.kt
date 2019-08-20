@@ -1,40 +1,46 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
-import java.util.logging.Logger;
+import java.security.KeyManagementException
+import java.security.NoSuchAlgorithmException
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
+import java.util.logging.Logger
+import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
-class TrustEverythingManager implements X509TrustManager {
-  private static final Logger logger = Logger.getLogger("TrustEverythingManager");
+internal class TrustEverythingManager : X509TrustManager {
 
-  public X509Certificate[] getAcceptedIssuers() {
-    return new X509Certificate[]{};
+  override fun getAcceptedIssuers(): Array<X509Certificate> {
+    return arrayOf()
   }
 
-  public void checkClientTrusted(final X509Certificate[] certs, final String authType) {
+  override fun checkClientTrusted(certs: Array<X509Certificate>, authType: String) {
     // Do nothing
   }
 
-  public void checkServerTrusted(final X509Certificate[] certs, final String authType) {
+  override fun checkServerTrusted(certs: Array<X509Certificate>, authType: String) {
     // Do nothing
   }
 
-  static void trustAllSslConnectionsByDisablingCertificateVerification() {
-    try {
-      logger.fine("Turning off certificate verification...");
-      final SSLContext sslContext = SSLContext.getInstance("SSL");
-      sslContext.init(null, new TrustManager[]{new TrustEverythingManager()}, new SecureRandom());
-      HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-      HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
-      logger.fine("Certificate verification has been turned off, all certificates are now accepted.");
-    } catch (final NoSuchAlgorithmException | KeyManagementException e) {
-      throw new HueApiException(e);
+  companion object {
+    private val logger = Logger.getLogger("TrustEverythingManager")
+
+    fun trustAllSslConnectionsByDisablingCertificateVerification() {
+      try {
+        logger.fine("Turning off certificate verification...")
+        val sslContext = SSLContext.getInstance("SSL")
+        sslContext.init(null, arrayOf<TrustManager>(TrustEverythingManager()), SecureRandom())
+        HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
+        HttpsURLConnection.setDefaultHostnameVerifier { hostname, session -> true }
+        logger.fine("Certificate verification has been turned off, all certificates are now accepted.")
+      } catch (e: NoSuchAlgorithmException) {
+        throw HueApiException(e)
+      } catch (e: KeyManagementException) {
+        throw HueApiException(e)
+      }
+
     }
   }
 }

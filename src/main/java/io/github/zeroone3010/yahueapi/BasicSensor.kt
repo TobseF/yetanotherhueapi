@@ -1,66 +1,42 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import io.github.zeroone3010.yahueapi.domain.SensorDto;
+import io.github.zeroone3010.yahueapi.domain.SensorDto
+import java.net.URL
+import java.time.ZonedDateTime
+import java.util.logging.Logger
 
-import java.net.URL;
-import java.time.ZonedDateTime;
-import java.util.Map;
-import java.util.function.Supplier;
-import java.util.logging.Logger;
+internal open class BasicSensor(override val id: String, sensor: SensorDto?, protected val baseUrl: URL, private val stateProvider: () -> Map<String, Any>?) : Sensor {
+  override val name: String?
+  override val type: SensorType
 
-class BasicSensor implements Sensor {
-  private static final Logger logger = Logger.getLogger("SensorImpl");
-  private static final String UTC_SUFFIX = "+00:00[UTC]";
+  override val lastUpdated: ZonedDateTime
+    get() = ZonedDateTime.parse(readStateValue("lastupdated", String::class.java) + UTC_SUFFIX)
 
-  protected final String id;
-  protected final String name;
-  protected final URL baseUrl;
-  protected final SensorType type;
-  private final Supplier<Map<String, Object>> stateProvider;
-
-  BasicSensor(final String id, final SensorDto sensor, final URL url, final Supplier<Map<String, Object>> stateProvider) {
-    this.id = id;
+  init {
     if (sensor == null) {
-      throw new HueApiException("Sensor " + id + " cannot be found.");
+      throw HueApiException("Sensor $id cannot be found.")
     }
-    this.name = sensor.getName();
-    this.baseUrl = url;
-    this.stateProvider = stateProvider;
-    this.type = SensorType.parseTypeString(sensor.getType());
+    this.name = sensor.name
+    this.type = SensorType.parseTypeString(sensor.type)
   }
 
-  @Override
-  public String getName() {
-    return name;
+  protected fun <T> readStateValue(stateValueKey: String, type: Class<T>): T {
+    val state = stateProvider.invoke()
+    logger.fine(state.toString())
+    val currentState = state?.get(stateValueKey)
+    return currentState as T
   }
 
-  @Override
-  public String getId() {
-    return id;
-  }
-
-  @Override
-  public SensorType getType() {
-    return type;
-  }
-
-  @Override
-  public ZonedDateTime getLastUpdated() {
-    return ZonedDateTime.parse(readStateValue("lastupdated", String.class) + UTC_SUFFIX);
-  }
-
-  protected <T> T readStateValue(final String stateValueKey, final Class<T> type) {
-    final Map<String, Object> state = stateProvider.get();
-      logger.fine(state.toString());
-      return type.cast(state.get(stateValueKey));
-  }
-
-  @Override
-  public String toString() {
+  override fun toString(): String {
     return "Sensor{" +
-        "id='" + id + '\'' +
-        ", name='" + name + '\'' +
+        "id='" + id + '\''.toString() +
+        ", name='" + name + '\''.toString() +
         ", type=" + type +
-        '}';
+        '}'.toString()
+  }
+
+  companion object {
+    private val logger = Logger.getLogger("SensorImpl")
+    private val UTC_SUFFIX = "+00:00[UTC]"
   }
 }

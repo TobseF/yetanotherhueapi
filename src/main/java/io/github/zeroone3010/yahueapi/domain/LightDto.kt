@@ -1,187 +1,79 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.github.zeroone3010.yahueapi.State;
+import com.fasterxml.jackson.annotation.JsonProperty
 
-import java.util.Map;
-
-public class LightDto {
-  private LightState state;
-  private ComponentSoftwareUpdate swupdate;
-  private String type;
-  private String name;
-  private String modelid;
-  private String manufacturername;
-  private Map<String, Object> capabilities;
-  private String uniqueid;
-  private String swversion;
-  private String swconfigid;
-  private String productid;
-  @JsonProperty("productname")
-  private String productName;
-  private LightConfig config;
-
-  public LightState getState() {
-    return state;
-  }
-
+class LightDto {
   /**
    * @param state
-   * @deprecated This method does not actually affect the state of the light.
-   * Use the {@link io.github.zeroone3010.yahueapi.Light#setState(State)} instead.
-   * Acquire these {@code Light} objects with the {@link io.github.zeroone3010.yahueapi.Room#getLights()} and
-   * {@link io.github.zeroone3010.yahueapi.Room#getLightByName(String)} methods.
    */
-  public void setState(LightState state) {
-    this.state = state;
-  }
-
-  public ComponentSoftwareUpdate getSwupdate() {
-    return swupdate;
-  }
-
+  @set:Deprecated("This method does not actually affect the state of the light.\n" +
+      "    Use the {@link io.github.zeroone3010.yahueapi.Light#setState(State)} instead.\n" +
+      "    Acquire these {@code Light} objects with the {@link io.github.zeroone3010.yahueapi.Room#getLights()} and\n" +
+      "    {@link io.github.zeroone3010.yahueapi.Room#getLightByName(String)} methods.")
+  var state: LightState? = null
   /**
    * @param swupdate
-   * @deprecated The properties of the light cannot be changed with this method.
    */
-  public void setSwupdate(ComponentSoftwareUpdate swupdate) {
-    this.swupdate = swupdate;
-  }
-
-  public String getType() {
-    return type;
-  }
-
+  @set:Deprecated("The properties of the light cannot be changed with this method.")
+  var swupdate: ComponentSoftwareUpdate? = null
   /**
    * @param type
-   * @deprecated The properties of the light cannot be changed with this method.
    */
-  public void setType(String type) {
-    this.type = type;
-  }
-
-  public String getName() {
-    return name;
-  }
-
+  @set:Deprecated("The properties of the light cannot be changed with this method.")
+  var type: String? = null
   /**
    * @param name
-   * @deprecated The properties of the light cannot be changed with this method.
    */
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public String getModelid() {
-    return modelid;
-  }
-
+  @set:Deprecated("The properties of the light cannot be changed with this method.")
+  var name: String? = null
   /**
    * @param modelid
-   * @deprecated The properties of the light cannot be changed with this method.
    */
-  public void setModelid(String modelid) {
-    this.modelid = modelid;
-  }
-
-  public String getManufacturername() {
-    return manufacturername;
-  }
-
+  @set:Deprecated("The properties of the light cannot be changed with this method.")
+  var modelid: String? = null
   /**
    * @param manufacturername
-   * @deprecated The properties of the light cannot be changed with this method.
    */
-  public void setManufacturername(String manufacturername) {
-    this.manufacturername = manufacturername;
-  }
-
-  public Map<String, Object> getCapabilities() {
-    return capabilities;
-  }
-
+  @set:Deprecated("The properties of the light cannot be changed with this method.")
+  var manufacturername: String? = null
   /**
    * @param capabilities
-   * @deprecated The properties of the light cannot be changed with this method.
    */
-  public void setCapabilities(Map<String, Object> capabilities) {
-    this.capabilities = capabilities;
-  }
-
-  public String getUniqueid() {
-    return uniqueid;
-  }
-
+  @set:Deprecated("The properties of the light cannot be changed with this method.")
+  var capabilities: Map<String, Any>? = null
   /**
    * @param uniqueid
-   * @deprecated The properties of the light cannot be changed with this method.
    */
-  public void setUniqueid(String uniqueid) {
-    this.uniqueid = uniqueid;
-  }
-
-  public String getSwversion() {
-    return swversion;
-  }
-
+  @set:Deprecated("The properties of the light cannot be changed with this method.")
+  var uniqueid: String? = null
   /**
    * @param swversion
-   * @deprecated The properties of the light cannot be changed with this method.
    */
-  public void setSwversion(String swversion) {
-    this.swversion = swversion;
-  }
-
-  public String getSwconfigid() {
-    return swconfigid;
-  }
-
+  @set:Deprecated("The properties of the light cannot be changed with this method.")
+  var swversion: String? = null
   /**
    * @param swconfigid
-   * @deprecated The properties of the light cannot be changed with this method.
    */
-  public void setSwconfigid(String swconfigid) {
-    this.swconfigid = swconfigid;
-  }
-
-  public String getProductid() {
-    return productid;
-  }
-
+  @set:Deprecated("The properties of the light cannot be changed with this method.")
+  var swconfigid: String? = null
   /**
    * @param productid
-   * @deprecated The properties of the light cannot be changed with this method.
    */
-  public void setProductid(String productid) {
-    this.productid = productid;
-  }
-
-  public String getProductName() {
-    return productName;
-  }
-
+  @set:Deprecated("The properties of the light cannot be changed with this method.")
+  var productid: String? = null
   /**
    * @param productName
-   * @deprecated The properties of the light cannot be changed with this method.
    */
-  public void setProductName(String productName) {
-    this.productName = productName;
-  }
-
-  public LightConfig getConfig() {
-    return config;
-  }
-
+  @JsonProperty("productname")
+  @set:Deprecated("The properties of the light cannot be changed with this method.")
+  var productName: String? = null
   /**
    * @param config
-   * @deprecated The properties of the light cannot be changed with this method.
    */
-  public void setConfig(LightConfig config) {
-    this.config = config;
-  }
+  @set:Deprecated("The properties of the light cannot be changed with this method.")
+  var config: LightConfig? = null
 
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

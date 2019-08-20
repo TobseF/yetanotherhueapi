@@ -1,32 +1,14 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-public class DimmerSwitchButtonEvent {
-  final DimmerSwitchButton button;
-  final DimmerSwitchAction action;
+class DimmerSwitchButtonEvent internal constructor(val button: DimmerSwitchButton, val action: DimmerSwitchAction) {
 
-  DimmerSwitchButtonEvent(final DimmerSwitchButton button, final DimmerSwitchAction action) {
-    this.button = button;
-    this.action = action;
-  }
+  internal constructor(buttonEventCode: Int) : this(DimmerSwitchButton.parseFromButtonEventCode(buttonEventCode),
+      DimmerSwitchAction.parseFromButtonEventCode(buttonEventCode))
 
-  DimmerSwitchButtonEvent(final int buttonEventCode) {
-    this(DimmerSwitchButton.parseFromButtonEventCode(buttonEventCode),
-        DimmerSwitchAction.parseFromButtonEventCode(buttonEventCode));
-  }
-
-  public DimmerSwitchButton getButton() {
-    return button;
-  }
-
-  public DimmerSwitchAction getAction() {
-    return action;
-  }
-
-  @Override
-  public String toString() {
+  override fun toString(): String {
     return "DimmerSwitchButtonEvent{" +
         "button=" + button +
         ", action=" + action +
-        '}';
+        '}'.toString()
   }
 }

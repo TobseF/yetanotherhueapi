@@ -1,607 +1,589 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.matching.EqualToJsonPattern;
-import com.github.tomakehurst.wiremock.matching.EqualToPattern;
-import io.github.zeroone3010.yahueapi.domain.BridgeConfig;
-import io.github.zeroone3010.yahueapi.domain.Root;
-import io.github.zeroone3010.yahueapi.domain.RuleAction;
-import io.github.zeroone3010.yahueapi.domain.RuleCondition;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock.*
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
+import com.github.tomakehurst.wiremock.matching.EqualToJsonPattern
+import com.github.tomakehurst.wiremock.matching.EqualToPattern
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import java.io.File
+import java.io.IOException
+import java.math.BigDecimal
+import java.nio.file.Files
+import java.time.*
+import java.util.*
+import java.util.stream.Collectors
 
-import java.io.File;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.Month;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+internal class HueTest {
 
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.put;
-import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-class HueTest {
-  private static final String API_KEY = "abcd1234";
-  private static final String API_BASE_PATH = "/api/" + API_KEY + "/";
-  private static final String MOTION_SENSOR_NAME = "Hallway sensor";
-  private static final String TEMPERATURE_SENSOR_NAME = "Hue temperature sensor 1";
-  private static final String DIMMER_SWITCH_NAME = "Living room door";
-
-  final WireMockServer wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
+  val wireMockServer = WireMockServer(wireMockConfig().dynamicPort())
 
   @BeforeEach
-  void startServer() {
-    wireMockServer.start();
+  fun startServer() {
+    wireMockServer.start()
   }
 
   @AfterEach
-  void stopServer() {
-    wireMockServer.stop();
+  fun stopServer() {
+    wireMockServer.stop()
   }
 
-  private Hue createHueAndInitializeMockServer() {
-    final String hueRoot = readFile("hueRoot.json");
+  private fun createHueAndInitializeMockServer(): Hue {
+    val hueRoot = readFile("hueRoot.json")
 
-    final ObjectMapper objectMapper = new ObjectMapper();
-    final JsonNode jsonNode;
+    val objectMapper = ObjectMapper()
+    val jsonNode: JsonNode
     try {
-      jsonNode = objectMapper.readTree(hueRoot);
-      wireMockServer.stubFor(get(API_BASE_PATH).willReturn(okJson(hueRoot)));
-      mockIndividualGetResponse(jsonNode, "lights", "100");
-      mockIndividualGetResponse(jsonNode, "lights", "101");
-      mockIndividualGetResponse(jsonNode, "lights", "200");
-      mockIndividualGetResponse(jsonNode, "lights", "300");
-      mockIndividualGetResponse(jsonNode, "sensors", "1");
-      mockIndividualGetResponse(jsonNode, "sensors", "4");
-      mockIndividualGetResponse(jsonNode, "sensors", "15");
-      mockIndividualGetResponse(jsonNode, "sensors", "16");
-      mockIndividualGetResponse(jsonNode, "groups", "1");
-      mockIndividualGetResponse(jsonNode, "groups", "2");
-    } catch (final IOException e) {
-      throw new RuntimeException(e);
+      jsonNode = objectMapper.readTree(hueRoot)
+      wireMockServer.stubFor(get(API_BASE_PATH).willReturn(okJson(hueRoot)))
+      mockIndividualGetResponse(jsonNode, "lights", "100")
+      mockIndividualGetResponse(jsonNode, "lights", "101")
+      mockIndividualGetResponse(jsonNode, "lights", "200")
+      mockIndividualGetResponse(jsonNode, "lights", "300")
+      mockIndividualGetResponse(jsonNode, "sensors", "1")
+      mockIndividualGetResponse(jsonNode, "sensors", "4")
+      mockIndividualGetResponse(jsonNode, "sensors", "15")
+      mockIndividualGetResponse(jsonNode, "sensors", "16")
+      mockIndividualGetResponse(jsonNode, "groups", "1")
+      mockIndividualGetResponse(jsonNode, "groups", "2")
+    } catch (e: IOException) {
+      throw RuntimeException(e)
     }
-    return new Hue("localhost:" + wireMockServer.port(), API_KEY);
+
+    return Hue("localhost:" + wireMockServer.port(), API_KEY)
   }
 
-  private void mockIndividualGetResponse(final JsonNode hueRoot, final String itemClass, final String id) throws JsonProcessingException {
-    final ObjectMapper objectMapper = new ObjectMapper();
-    final String json = objectMapper.writeValueAsString(hueRoot.get(itemClass).get(id));
-    wireMockServer.stubFor(get(API_BASE_PATH + itemClass + "/" + id).willReturn(okJson(json)));
-  }
-
-  @Test
-  void testInitializationAndRefresh() {
-    final Hue hue = createHueAndInitializeMockServer();
-    wireMockServer.verify(0, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-
-    hue.refresh();
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-
-    hue.refresh();
-    wireMockServer.verify(2, getRequestedFor(urlEqualTo(API_BASE_PATH)));
+  @Throws(JsonProcessingException::class)
+  private fun mockIndividualGetResponse(hueRoot: JsonNode, itemClass: String, id: String) {
+    val objectMapper = ObjectMapper()
+    val json = objectMapper.writeValueAsString(hueRoot.get(itemClass).get(id))
+    wireMockServer.stubFor(get("$API_BASE_PATH$itemClass/$id").willReturn(okJson(json)))
   }
 
   @Test
-  void testGetRooms() {
-    final Hue hue = createHueAndInitializeMockServer();
+  fun testInitializationAndRefresh() {
+    val hue = createHueAndInitializeMockServer()
+    wireMockServer.verify(0, getRequestedFor(urlEqualTo(API_BASE_PATH)))
 
-    assertEquals(3, hue.getRooms().size());
-    hue.getRooms();
-    hue.getRooms();
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
+    hue.refresh()
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+
+    hue.refresh()
+    wireMockServer.verify(2, getRequestedFor(urlEqualTo(API_BASE_PATH)))
   }
 
   @Test
-  void testGetRoomByName() {
-    final Hue hue = createHueAndInitializeMockServer();
+  fun testGetRooms() {
+    val hue = createHueAndInitializeMockServer()
 
-    assertEquals(2, hue.getRoomByName("Living room").get().getLights().size());
-    assertEquals(1, hue.getRoomByName("Bedroom").get().getLights().size());
-    assertFalse(hue.getRoomByName("No such room").isPresent());
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
+    assertEquals(3, hue.getRooms().size)
+    hue.getRooms()
+    hue.getRooms()
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
   }
 
   @Test
-  void testGetZones() {
-    final Hue hue = createHueAndInitializeMockServer();
+  fun testGetRoomByName() {
+    val hue = createHueAndInitializeMockServer()
 
-    assertEquals(1, hue.getZones().size());
-    hue.getZones();
-    hue.getZones();
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
+    assertEquals(2, hue.getRoomByName("Living room")!!.lights.size)
+    assertEquals(1, hue.getRoomByName("Bedroom")!!.lights.size)
+    assertFalse(hue.getRoomByName("No such room") != null)
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
   }
 
   @Test
-  void testGetZoneByName() {
-    final Hue hue = createHueAndInitializeMockServer();
+  fun testGetZones() {
+    val hue = createHueAndInitializeMockServer()
 
-    assertEquals(2, hue.getZoneByName("Path to toilet").get().getLights().size());
-    assertFalse(hue.getZoneByName("No such zone").isPresent());
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
+    assertEquals(1, hue.getZones().size)
+    hue.getZones()
+    hue.getZones()
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
   }
 
   @Test
-  void testGetLightReachability() {
-    final Hue hue = createHueAndInitializeMockServer();
+  fun testGetZoneByName() {
+    val hue = createHueAndInitializeMockServer()
 
-    assertTrue(hue.getRoomByName("Living room").get().getLightByName("LR 1").get().isReachable());
-    assertFalse(hue.getRoomByName("Bedroom").get().getLightByName("Pendant").get().isReachable());
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
+    assertEquals(2, hue.getZoneByName("Path to toilet")!!.lights.size)
+    assertFalse(hue.getZoneByName("No such zone") != null)
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
   }
 
   @Test
-  void testLightTypes() {
-    final Hue hue = createHueAndInitializeMockServer();
+  fun testGetLightReachability() {
+    val hue = createHueAndInitializeMockServer()
+
+    assertTrue(hue.getRoomByName("Living room")!!.getLightByName("LR 1")!!.isReachable)
+    assertFalse(hue.getRoomByName("Bedroom")!!.getLightByName("Pendant")!!.isReachable)
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+  }
+
+  @Test
+  fun testLightTypes() {
+    val hue = createHueAndInitializeMockServer()
     assertEquals(LightType.EXTENDED_COLOR,
-        hue.getRoomByName("Living room").get().getLightByName("LR 1").get().getType());
+        hue.getRoomByName("Living room")!!.getLightByName("LR 1")!!.type)
     assertEquals(LightType.COLOR_TEMPERATURE,
-        hue.getRoomByName("Living room").get().getLightByName("LR 2").get().getType());
+        hue.getRoomByName("Living room")!!.getLightByName("LR 2")!!.type)
     assertEquals(LightType.COLOR,
-        hue.getRoomByName("Hallway 1").get().getLightByName("LED strip 1").get().getType());
+        hue.getRoomByName("Hallway 1")!!.getLightByName("LED strip 1")!!.type)
   }
 
   @Test
-  void testGetLightStateWhenXyMode() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final State state = hue.getRoomByName("Living room").get().getLightByName("LR 1").get().getState();
-    assertFalse(state.getOn());
-    assertEquals(0.3689f, state.getXy().get(0).floatValue());
-    assertEquals(0.3719f, state.getXy().get(1).floatValue());
-    assertEquals(254, state.getBri().intValue());
-    assertNull(state.getHue());
-    assertNull(state.getSat());
-    assertNull(state.getCt());
+  fun testGetLightStateWhenXyMode() {
+    val hue = createHueAndInitializeMockServer()
+    val state = hue.getRoomByName("Living room")!!.getLightByName("LR 1")!!.state
+    assertFalse(state.on!!)
+    assertEquals(0.3689f, state.xy!![0])
+    assertEquals(0.3719f, state.xy!![1])
+    assertEquals(254, state.bri!!.toInt())
+    assertNull(state.hue)
+    assertNull(state.sat)
+    assertNull(state.ct)
 
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/100")));
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/100")))
   }
 
   @Test
-  void testGetLightStateWhenCtMode() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final State state = hue.getRoomByName("Living room").get().getLightByName("LR 2").get().getState();
-    assertFalse(state.getOn());
-    assertNull(state.getXy());
-    assertEquals(123, state.getBri().intValue());
-    assertEquals(230, state.getCt().intValue());
-    assertNull(state.getHue());
-    assertNull(state.getSat());
+  fun testGetLightStateWhenCtMode() {
+    val hue = createHueAndInitializeMockServer()
+    val state = hue.getRoomByName("Living room")!!.getLightByName("LR 2")!!.state
+    assertFalse(state.on!!)
+    assertNull(state.xy)
+    assertEquals(123, state.bri!!.toInt())
+    assertEquals(230, state.ct!!.toInt())
+    assertNull(state.hue)
+    assertNull(state.sat)
 
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/101")));
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/101")))
   }
 
   @Test
-  void testGetLightStateWhenHsMode() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final State state = hue.getRoomByName("Hallway 1").get()
-        .getLightByName("LED strip 1").get().getState();
+  fun testGetLightStateWhenHsMode() {
+    val hue = createHueAndInitializeMockServer()
+    val state = hue.getRoomByName("Hallway 1")!!
+        .getLightByName("LED strip 1")!!.state
 
-    assertTrue(state.getOn());
-    assertNull(state.getXy());
-    assertEquals(42, state.getBri().intValue());
-    assertEquals(38677, state.getHue().intValue());
-    assertEquals(61, state.getSat().intValue());
-    assertNull(state.getCt());
+    assertTrue(state.on!!)
+    assertNull(state.xy)
+    assertEquals(42, state.bri!!.toInt())
+    assertEquals(38677, state.hue!!.toInt())
+    assertEquals(61, state.sat!!.toInt())
+    assertNull(state.ct)
 
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/300")));
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/300")))
   }
 
   @Test
-  void testGetLightStateQueriesTheBridgeEveryTimeWhenCachingIsOffByDefault() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final Light light = hue.getRoomByName("Hallway 1").get().getLightByName("LED strip 1").get();
-    assertTrue(light.getState().getOn());
-    assertTrue(light.getState().getOn());
-    assertTrue(light.getState().getOn());
-    assertTrue(light.getState().getOn());
-    assertTrue(light.getState().getOn());
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    wireMockServer.verify(5, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/300")));
+  fun testGetLightStateQueriesTheBridgeEveryTimeWhenCachingIsOffByDefault() {
+    val hue = createHueAndInitializeMockServer()
+    val light = hue.getRoomByName("Hallway 1")!!.getLightByName("LED strip 1")!!
+    assertTrue(light.state.on!!)
+    assertTrue(light.state.on!!)
+    assertTrue(light.state.on!!)
+    assertTrue(light.state.on!!)
+    assertTrue(light.state.on!!)
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    wireMockServer.verify(5, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/300")))
   }
 
   @Test
-  void testGetLightStateQueriesTheBridgeEveryTimeWhenCachingIsOffExplicitly() {
-    final Hue hue = createHueAndInitializeMockServer();
-    hue.setCaching(false);
-    final Light light = hue.getRoomByName("Hallway 1").get().getLightByName("LED strip 1").get();
-    assertTrue(light.getState().getOn());
-    assertTrue(light.getState().getOn());
-    assertTrue(light.getState().getOn());
-    assertTrue(light.getState().getOn());
-    assertTrue(light.getState().getOn());
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    wireMockServer.verify(5, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/300")));
+  fun testGetLightStateQueriesTheBridgeEveryTimeWhenCachingIsOffExplicitly() {
+    val hue = createHueAndInitializeMockServer()
+    hue.isCaching = false
+    val light = hue.getRoomByName("Hallway 1")!!.getLightByName("LED strip 1")!!
+    assertTrue(light.state.on!!)
+    assertTrue(light.state.on!!)
+    assertTrue(light.state.on!!)
+    assertTrue(light.state.on!!)
+    assertTrue(light.state.on!!)
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    wireMockServer.verify(5, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/300")))
   }
 
   @Test
-  void testGetLightStateIsNotQueriedFromTheBridgeWhenCachingIsOn() {
-    final Hue hue = createHueAndInitializeMockServer();
-    hue.setCaching(true);
-    final Light light = hue.getRoomByName("Hallway 1").get().getLightByName("LED strip 1").get();
-    assertTrue(light.getState().getOn());
-    assertTrue(light.getState().getOn());
-    assertTrue(light.getState().getOn());
-    assertTrue(light.getState().getOn());
-    assertTrue(light.getState().getOn());
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    wireMockServer.verify(0, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/300")));
+  fun testGetLightStateIsNotQueriedFromTheBridgeWhenCachingIsOn() {
+    val hue = createHueAndInitializeMockServer()
+    hue.isCaching = true
+    val light = hue.getRoomByName("Hallway 1")!!.getLightByName("LED strip 1")!!
+    assertTrue(light.state.on!!)
+    assertTrue(light.state.on!!)
+    assertTrue(light.state.on!!)
+    assertTrue(light.state.on!!)
+    assertTrue(light.state.on!!)
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    wireMockServer.verify(0, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/300")))
   }
 
   @Test
-  void testGetLightStateWhenTogglingCachingOnAndOff() {
-    final Hue hue = createHueAndInitializeMockServer();
+  fun testGetLightStateWhenTogglingCachingOnAndOff() {
+    val hue = createHueAndInitializeMockServer()
 
-    hue.setCaching(true);
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    final Light light = hue.getRoomByName("Hallway 1").get().getLightByName("LED strip 1").get();
-    light.getState();
-    light.getState();
-    wireMockServer.verify(0, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/300")));
+    hue.isCaching = true
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    val light = hue.getRoomByName("Hallway 1")!!.getLightByName("LED strip 1")!!
+    light.state
+    light.state
+    wireMockServer.verify(0, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/300")))
 
-    hue.setCaching(false);
-    wireMockServer.verify(2, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    light.getState();
-    light.getState();
-    light.getState();
-    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/300")));
+    hue.isCaching = false
+    wireMockServer.verify(2, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    light.state
+    light.state
+    light.state
+    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/300")))
 
-    hue.setCaching(true);
-    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    light.getState();
-    light.getState();
-    light.getState();
-    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/300")));
+    hue.isCaching = true
+    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    light.state
+    light.state
+    light.state
+    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH + "lights/300")))
   }
 
   @Test
-  void testGetUnknownSensors() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final Collection<Sensor> sensors = hue.getUnknownSensors();
-    assertEquals(2, sensors.size());
+  fun testGetUnknownSensors() {
+    val hue = createHueAndInitializeMockServer()
+    val sensors = hue.unknownSensors
+    assertEquals(2, sensors.size)
   }
 
   @Test
-  void testGetTemperatureSensorByName() {
-    final Hue hue = createHueAndInitializeMockServer();
-    assertTrue(hue.getTemperatureSensorByName(TEMPERATURE_SENSOR_NAME).isPresent());
-    assertFalse(hue.getTemperatureSensorByName("No such sensor").isPresent());
+  fun testGetTemperatureSensorByName() {
+    val hue = createHueAndInitializeMockServer()
+    assertNotNull(hue.getTemperatureSensorByName(TEMPERATURE_SENSOR_NAME))
+    assertNull(hue.getTemperatureSensorByName("No such sensor"))
   }
 
   @Test
-  void testGetMotionSensorByName() {
-    final Hue hue = createHueAndInitializeMockServer();
-    assertTrue(hue.getMotionSensorByName(MOTION_SENSOR_NAME).isPresent());
-    assertFalse(hue.getMotionSensorByName("No such sensor").isPresent());
+  fun testGetMotionSensorByName() {
+    val hue = createHueAndInitializeMockServer()
+    assertTrue(hue.getMotionSensorByName(MOTION_SENSOR_NAME) != null)
+    assertFalse(hue.getMotionSensorByName("No such sensor") != null)
   }
 
   @Test
-  void testMotionSensorLastUpdated() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final ZonedDateTime actual = hue.getMotionSensorByName(MOTION_SENSOR_NAME).map(Sensor::getLastUpdated).get();
-    final ZonedDateTime expected = ZonedDateTime.of(LocalDate.of(2018, Month.JULY, 29),
-        LocalTime.of(6, 6, 6), ZoneId.of("UTC"));
-    assertEquals(expected, actual);
+  fun testMotionSensorLastUpdated() {
+    val hue = createHueAndInitializeMockServer()
+    val actual = hue.getMotionSensorByName(MOTION_SENSOR_NAME)!!.lastUpdated
+    val expected = ZonedDateTime.of(LocalDate.of(2018, Month.JULY, 29),
+        LocalTime.of(6, 6, 6), ZoneId.of("UTC"))
+    assertEquals(expected, actual)
   }
 
   @Test
-  void testMotionSensorPresence() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final boolean presence = hue.getMotionSensorByName(MOTION_SENSOR_NAME).map(MotionSensor::isPresence).get();
-    assertTrue(presence);
+  fun testMotionSensorPresence() {
+    val hue = createHueAndInitializeMockServer()
+    assertTrue(hue.getMotionSensorByName(MOTION_SENSOR_NAME) != null)
   }
 
   @Test
-  void testTemperatureSensorTemperature() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final double temperature = hue.getTemperatureSensorByName(TEMPERATURE_SENSOR_NAME)
-        .map(TemperatureSensor::getDegreesCelsius)
-        .map(BigDecimal::doubleValue).get();
-    assertEquals(29.53d, temperature);
+  fun testTemperatureSensorTemperature() {
+    val hue = createHueAndInitializeMockServer()
+    val temperature = hue.getTemperatureSensorByName(TEMPERATURE_SENSOR_NAME)!!.degreesCelsius.toDouble()
+    assertEquals(29.53, temperature)
   }
 
   @Test
-  void testDaylightSensor() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final Boolean daylight = hue.getDaylightSensors().stream()
-        .map(DaylightSensor::isDaylightTime)
-        .findFirst().get();
-    assertTrue(daylight);
+  fun testDaylightSensor() {
+    val hue = createHueAndInitializeMockServer()
+    val daylight = hue.daylightSensors
+        .map { it.isDaylightTime }
+        .firstOrNull()
+    assertTrue(daylight != null)
   }
 
   @Test
-  void testDimmerSwitchLastUpdated() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final ZonedDateTime actual = hue.getDimmerSwitchByName(DIMMER_SWITCH_NAME).map(Sensor::getLastUpdated).get();
-    final ZonedDateTime expected = ZonedDateTime.of(LocalDate.of(2018, Month.JULY, 28),
-        LocalTime.of(21, 12, 00), ZoneId.of("UTC"));
-    assertEquals(expected, actual);
+  fun testDimmerSwitchLastUpdated() {
+    val hue = createHueAndInitializeMockServer()
+    val actual = hue.getDimmerSwitchByName(DIMMER_SWITCH_NAME)!!.lastUpdated
+    val expected = ZonedDateTime.of(LocalDate.of(2018, Month.JULY, 28),
+        LocalTime.of(21, 12, 0), ZoneId.of("UTC"))
+    assertEquals(expected, actual)
   }
 
   @Test
-  void testDimmerSwitchLastButtonEvent() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final DimmerSwitchButtonEvent event = hue.getDimmerSwitchByName(DIMMER_SWITCH_NAME).map(DimmerSwitch::getLatestButtonEvent).get();
-    assertEquals(DimmerSwitchAction.SHORT_RELEASED, event.getAction());
-    assertEquals(DimmerSwitchButton.OFF, event.getButton());
+  fun testDimmerSwitchLastButtonEvent() {
+    val hue = createHueAndInitializeMockServer()
+    val event = hue.getDimmerSwitchByName(DIMMER_SWITCH_NAME)!!.latestButtonEvent
+    assertEquals(DimmerSwitchAction.SHORT_RELEASED, event.action)
+    assertEquals(DimmerSwitchButton.OFF, event.button)
   }
 
   @Test
-  void testGetSensorStateQueriesTheBridgeEveryTimeWhenCachingIsOffByDefault() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final TemperatureSensor sensor = hue.getTemperatureSensorByName("Hue temperature sensor 1").get();
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    wireMockServer.verify(5, getRequestedFor(urlEqualTo(API_BASE_PATH + "sensors/15")));
+  fun testGetSensorStateQueriesTheBridgeEveryTimeWhenCachingIsOffByDefault() {
+    val hue = createHueAndInitializeMockServer()
+    val sensor = hue.getTemperatureSensorByName("Hue temperature sensor 1")
+    assertEquals(BigDecimal("29.53"), sensor!!.degreesCelsius)
+    assertEquals(BigDecimal("29.53"), sensor.degreesCelsius)
+    assertEquals(BigDecimal("29.53"), sensor.degreesCelsius)
+    assertEquals(BigDecimal("29.53"), sensor.degreesCelsius)
+    assertEquals(BigDecimal("29.53"), sensor.degreesCelsius)
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    wireMockServer.verify(5, getRequestedFor(urlEqualTo(API_BASE_PATH + "sensors/15")))
   }
 
   @Test
-  void testGetSensorStateQueriesTheBridgeEveryTimeWhenCachingIsOffExplicitly() {
-    final Hue hue = createHueAndInitializeMockServer();
-    hue.setCaching(false);
-    final TemperatureSensor sensor = hue.getTemperatureSensorByName("Hue temperature sensor 1").get();
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    wireMockServer.verify(5, getRequestedFor(urlEqualTo(API_BASE_PATH + "sensors/15")));
+  fun testGetSensorStateQueriesTheBridgeEveryTimeWhenCachingIsOffExplicitly() {
+    val hue = createHueAndInitializeMockServer()
+    hue.isCaching = false
+    val sensor = hue.getTemperatureSensorByName("Hue temperature sensor 1")
+    assertEquals(BigDecimal("29.53"), sensor!!.degreesCelsius)
+    assertEquals(BigDecimal("29.53"), sensor.degreesCelsius)
+    assertEquals(BigDecimal("29.53"), sensor.degreesCelsius)
+    assertEquals(BigDecimal("29.53"), sensor.degreesCelsius)
+    assertEquals(BigDecimal("29.53"), sensor.degreesCelsius)
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    wireMockServer.verify(5, getRequestedFor(urlEqualTo(API_BASE_PATH + "sensors/15")))
   }
 
   @Test
-  void testGetSensorStateIsNotQueriedFromTheBridgeWhenCachingIsOn() {
-    final Hue hue = createHueAndInitializeMockServer();
-    hue.setCaching(true);
-    final TemperatureSensor sensor = hue.getTemperatureSensorByName("Hue temperature sensor 1").get();
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    assertEquals(new BigDecimal("29.53"), sensor.getDegreesCelsius());
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    wireMockServer.verify(0, getRequestedFor(urlEqualTo(API_BASE_PATH + "sensors/15")));
+  fun testGetSensorStateIsNotQueriedFromTheBridgeWhenCachingIsOn() {
+    val hue = createHueAndInitializeMockServer()
+    hue.isCaching = true
+    val sensor = hue.getTemperatureSensorByName("Hue temperature sensor 1")
+    assertEquals(BigDecimal("29.53"), sensor!!.degreesCelsius)
+    assertEquals(BigDecimal("29.53"), sensor.degreesCelsius)
+    assertEquals(BigDecimal("29.53"), sensor.degreesCelsius)
+    assertEquals(BigDecimal("29.53"), sensor.degreesCelsius)
+    assertEquals(BigDecimal("29.53"), sensor.degreesCelsius)
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    wireMockServer.verify(0, getRequestedFor(urlEqualTo(API_BASE_PATH + "sensors/15")))
   }
 
   @Test
-  void testGetSensorStateWhenTogglingCachingOnAndOff() {
-    final Hue hue = createHueAndInitializeMockServer();
+  fun testGetSensorStateWhenTogglingCachingOnAndOff() {
+    val hue = createHueAndInitializeMockServer()
 
-    hue.setCaching(true);
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    final TemperatureSensor sensor = hue.getTemperatureSensorByName("Hue temperature sensor 1").get();
-    sensor.getDegreesCelsius();
-    sensor.getDegreesCelsius();
-    wireMockServer.verify(0, getRequestedFor(urlEqualTo(API_BASE_PATH + "sensors/15")));
+    hue.isCaching = true
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    val sensor = hue.getTemperatureSensorByName("Hue temperature sensor 1")
+    sensor!!.degreesCelsius
+    sensor.degreesCelsius
+    wireMockServer.verify(0, getRequestedFor(urlEqualTo(API_BASE_PATH + "sensors/15")))
 
-    hue.setCaching(false);
-    wireMockServer.verify(2, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    sensor.getDegreesCelsius();
-    sensor.getDegreesCelsius();
-    sensor.getDegreesCelsius();
-    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH + "sensors/15")));
+    hue.isCaching = false
+    wireMockServer.verify(2, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    sensor.degreesCelsius
+    sensor.degreesCelsius
+    sensor.degreesCelsius
+    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH + "sensors/15")))
 
-    hue.setCaching(true);
-    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    sensor.getDegreesCelsius();
-    sensor.getDegreesCelsius();
-    sensor.getDegreesCelsius();
-    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH + "sensors/15")));
+    hue.isCaching = true
+    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    sensor.degreesCelsius
+    sensor.degreesCelsius
+    sensor.degreesCelsius
+    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH + "sensors/15")))
   }
 
   @Test
-  void testSetLightBrightness() {
+  fun testSetLightBrightness() {
     wireMockServer.stubFor(put(API_BASE_PATH + "lights/100/state")
         .withRequestBody(equalToJson("{\"bri\":42}"))
-        .willReturn(okJson("[{\"success\":{\"/lights/100/state/bri\":42}}]")));
+        .willReturn(okJson("[{\"success\":{\"/lights/100/state/bri\":42}}]")))
 
-    final Hue hue = createHueAndInitializeMockServer();
-    final Light light = hue.getRoomByName("Living room").get().getLightByName("LR 1").get();
-    light.setBrightness(42);
+    val hue = createHueAndInitializeMockServer()
+    val light = hue.getRoomByName("Living room")!!.getLightByName("LR 1")!!
+    light.setBrightness(42)
 
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
     wireMockServer.verify(1, putRequestedFor(urlEqualTo(API_BASE_PATH + "lights/100/state"))
-        .withRequestBody(new EqualToJsonPattern("{\"bri\":42}", false, false)));
+        .withRequestBody(EqualToJsonPattern("{\"bri\":42}", false, false)))
   }
 
   @Test
-  void testTurnLightOff() {
+  fun testTurnLightOff() {
     wireMockServer.stubFor(put(API_BASE_PATH + "lights/100/state")
         .withRequestBody(equalToJson("{\"on\":false}"))
-        .willReturn(okJson("[{\"success\":{\"/lights/100/state/on\":false}}]")));
+        .willReturn(okJson("[{\"success\":{\"/lights/100/state/on\":false}}]")))
 
-    final Hue hue = createHueAndInitializeMockServer();
-    final Light light = hue.getRoomByName("Living room").get().getLightByName("LR 1").get();
-    light.turnOff();
+    val hue = createHueAndInitializeMockServer()
+    val light = hue.getRoomByName("Living room")!!.getLightByName("LR 1")!!
+    light.turnOff()
 
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
     wireMockServer.verify(1, putRequestedFor(urlEqualTo(API_BASE_PATH + "lights/100/state"))
-        .withRequestBody(new EqualToJsonPattern("{\"on\":false}", false, false)));
+        .withRequestBody(EqualToJsonPattern("{\"on\":false}", false, false)))
   }
 
   @Test
-  void testTurnLightOn() {
+  fun testTurnLightOn() {
     wireMockServer.stubFor(put(API_BASE_PATH + "lights/100/state")
         .withRequestBody(equalToJson("{\"on\":true}"))
-        .willReturn(okJson("[{\"success\":{\"/lights/100/state/on\":true}}]")));
+        .willReturn(okJson("[{\"success\":{\"/lights/100/state/on\":true}}]")))
 
-    final Hue hue = createHueAndInitializeMockServer();
-    final Light light = hue.getRoomByName("Living room").get().getLightByName("LR 1").get();
-    light.turnOn();
+    val hue = createHueAndInitializeMockServer()
+    val light = hue.getRoomByName("Living room")!!.getLightByName("LR 1")!!
+    light.turnOn()
 
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
     wireMockServer.verify(1, putRequestedFor(urlEqualTo(API_BASE_PATH + "lights/100/state"))
-        .withRequestBody(new EqualToJsonPattern("{\"on\":true}", false, false)));
+        .withRequestBody(EqualToJsonPattern("{\"on\":true}", false, false)))
   }
 
   @Test
-  void testSetLightState() {
+  fun testSetLightState() {
     wireMockServer.stubFor(put(API_BASE_PATH + "lights/100/state")
         .withRequestBody(equalToJson("{\"hue\":1, \"sat\":2, \"bri\":3}"))
-        .willReturn(okJson("[{\"success\":{\"/lights/100/state/on\":true}}]")));
+        .willReturn(okJson("[{\"success\":{\"/lights/100/state/on\":true}}]")))
 
-    final Hue hue = createHueAndInitializeMockServer();
-    final Light light = hue.getRoomByName("Living room").get().getLightByName("LR 1").get();
-    light.setState(State.builder().hue(1).saturation(2).brightness(3).keepCurrentState());
+    val hue = createHueAndInitializeMockServer()
+    val light = hue.getRoomByName("Living room")!!.getLightByName("LR 1")!!
+    light.state = State.builder().hue(1).saturation(2).brightness(3).keepCurrentState()
 
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
     wireMockServer.verify(1, putRequestedFor(urlEqualTo(API_BASE_PATH + "lights/100/state"))
-        .withRequestBody(new EqualToJsonPattern("{\"hue\":1, \"sat\":2, \"bri\":3}", false, false)));
+        .withRequestBody(EqualToJsonPattern("{\"hue\":1, \"sat\":2, \"bri\":3}", false, false)))
   }
 
   @Test
-  void testSetRoomBrightness() {
+  fun testSetRoomBrightness() {
     wireMockServer.stubFor(put(API_BASE_PATH + "groups/1/action")
-        .willReturn(okJson("[{\"success\":{\"/gruops/1/action/bri\":42}}]")));
+        .willReturn(okJson("[{\"success\":{\"/gruops/1/action/bri\":42}}]")))
 
-    final Hue hue = createHueAndInitializeMockServer();
-    hue.getRoomByName("Living room").get().setBrightness(42);
+    val hue = createHueAndInitializeMockServer()
+    hue.getRoomByName("Living room")!!.setBrightness(42)
 
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
     wireMockServer.verify(1, putRequestedFor(urlEqualTo(API_BASE_PATH + "groups/1/action"))
-        .withRequestBody(new EqualToPattern("{\"bri\":42}", false)));
+        .withRequestBody(EqualToPattern("{\"bri\":42}", false)))
   }
 
   @Test
-  void testGetRoomStateQueriesTheBridgeEveryTimeWhenCachingIsOffByDefault() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final Room room = hue.getRoomByName("Living room").get();
-    assertFalse(room.isAnyOn());
-    assertFalse(room.isAllOn());
-    assertFalse(room.isAnyOn());
-    assertFalse(room.isAllOn());
-    assertFalse(room.isAnyOn());
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    wireMockServer.verify(5, getRequestedFor(urlEqualTo(API_BASE_PATH + "groups/1")));
+  fun testGetRoomStateQueriesTheBridgeEveryTimeWhenCachingIsOffByDefault() {
+    val hue = createHueAndInitializeMockServer()
+    val room = hue.getRoomByName("Living room")!!
+    assertFalse(room.isAnyOn)
+    assertFalse(room.isAllOn)
+    assertFalse(room.isAnyOn)
+    assertFalse(room.isAllOn)
+    assertFalse(room.isAnyOn)
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    wireMockServer.verify(5, getRequestedFor(urlEqualTo(API_BASE_PATH + "groups/1")))
   }
 
   @Test
-  void testGetRoomStateQueriesTheBridgeEveryTimeWhenCachingIsOffExplicitly() {
-    final Hue hue = createHueAndInitializeMockServer();
-    hue.setCaching(false);
-    final Room room = hue.getRoomByName("Living room").get();
-    assertFalse(room.isAnyOn());
-    assertFalse(room.isAllOn());
-    assertFalse(room.isAnyOn());
-    assertFalse(room.isAllOn());
-    assertFalse(room.isAnyOn());
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    wireMockServer.verify(5, getRequestedFor(urlEqualTo(API_BASE_PATH + "groups/1")));
+  fun testGetRoomStateQueriesTheBridgeEveryTimeWhenCachingIsOffExplicitly() {
+    val hue = createHueAndInitializeMockServer()
+    hue.isCaching = false
+    val room = hue.getRoomByName("Living room")!!
+    assertFalse(room.isAnyOn)
+    assertFalse(room.isAllOn)
+    assertFalse(room.isAnyOn)
+    assertFalse(room.isAllOn)
+    assertFalse(room.isAnyOn)
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    wireMockServer.verify(5, getRequestedFor(urlEqualTo(API_BASE_PATH + "groups/1")))
   }
 
   @Test
-  void testGetRoomStateIsNotQueriedFromTheBridgeWhenCachingIsOn() {
-    final Hue hue = createHueAndInitializeMockServer();
-    hue.setCaching(true);
-    final Room room = hue.getRoomByName("Living room").get();
-    assertFalse(room.isAnyOn());
-    assertFalse(room.isAllOn());
-    assertFalse(room.isAnyOn());
-    assertFalse(room.isAllOn());
-    assertFalse(room.isAnyOn());
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    wireMockServer.verify(0, getRequestedFor(urlEqualTo(API_BASE_PATH + "groups/1")));
+  fun testGetRoomStateIsNotQueriedFromTheBridgeWhenCachingIsOn() {
+    val hue = createHueAndInitializeMockServer()
+    hue.isCaching = true
+    val room = hue.getRoomByName("Living room")!!
+    assertFalse(room.isAnyOn)
+    assertFalse(room.isAllOn)
+    assertFalse(room.isAnyOn)
+    assertFalse(room.isAllOn)
+    assertFalse(room.isAnyOn)
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    wireMockServer.verify(0, getRequestedFor(urlEqualTo(API_BASE_PATH + "groups/1")))
   }
 
   @Test
-  void testGetRoomStateWhenTogglingCachingOnAndOff() {
-    final Hue hue = createHueAndInitializeMockServer();
+  fun testGetRoomStateWhenTogglingCachingOnAndOff() {
+    val hue = createHueAndInitializeMockServer()
 
-    hue.setCaching(true);
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    final Room room = hue.getRoomByName("Bedroom").get();
-    assertTrue(room.isAnyOn());
-    assertTrue(room.isAllOn());
-    wireMockServer.verify(0, getRequestedFor(urlEqualTo(API_BASE_PATH + "groups/2")));
+    hue.isCaching = true
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    val room = hue.getRoomByName("Bedroom")!!
+    assertTrue(room.isAnyOn)
+    assertTrue(room.isAllOn)
+    wireMockServer.verify(0, getRequestedFor(urlEqualTo(API_BASE_PATH + "groups/2")))
 
-    hue.setCaching(false);
-    wireMockServer.verify(2, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    assertTrue(room.isAnyOn());
-    assertTrue(room.isAllOn());
-    assertTrue(room.isAnyOn());
-    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH + "groups/2")));
+    hue.isCaching = false
+    wireMockServer.verify(2, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    assertTrue(room.isAnyOn)
+    assertTrue(room.isAllOn)
+    assertTrue(room.isAnyOn)
+    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH + "groups/2")))
 
-    hue.setCaching(true);
-    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH)));
-    assertTrue(room.isAllOn());
-    assertTrue(room.isAnyOn());
-    assertTrue(room.isAllOn());
-    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH + "groups/2")));
+    hue.isCaching = true
+    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH)))
+    assertTrue(room.isAllOn)
+    assertTrue(room.isAnyOn)
+    assertTrue(room.isAllOn)
+    wireMockServer.verify(3, getRequestedFor(urlEqualTo(API_BASE_PATH + "groups/2")))
   }
 
   @Test
-  void testGetRawRules() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final Root root = hue.getRaw();
-    assertEquals(2, root.getRules().size());
-    assertEquals("Dimmer Switch 4 on0", root.getRules().get("1").getName());
-    assertEquals("6655664454522131aaaeeaaeaeaeaea", root.getRules().get("1").getOwner());
-    assertEquals("2017-07-14T14:04:04", root.getRules().get("1").getCreated());
-    assertEquals("2018-07-27T13:00:13", root.getRules().get("1").getLastTriggered());
-    assertEquals(5, root.getRules().get("1").getTimesTriggered());
-    assertEquals("enabled", root.getRules().get("1").getStatus());
-    assertEquals(true, root.getRules().get("1").isRecycle());
-    final List<RuleCondition> conditions = root.getRules().get("1").getConditions();
-    assertEquals(3, conditions.size());
-    assertEquals("/sensors/4/state/buttonevent", conditions.get(0).getAddress());
-    assertEquals("eq", conditions.get(0).getOperator());
-    assertEquals("1000", conditions.get(0).getValue());
-    final List<RuleAction> actions = root.getRules().get("1").getActions();
-    assertEquals(1, actions.size());
-    assertEquals("/groups/1/action", actions.get(0).getAddress());
-    assertEquals("PUT", actions.get(0).getMethod());
-    assertEquals(Collections.singletonMap("on", true), actions.get(0).getBody());
+  fun testGetRawRules() {
+    val hue = createHueAndInitializeMockServer()
+    val root = hue.raw
+    assertEquals(2, root!!.rules!!.size)
+    assertEquals("Dimmer Switch 4 on0", root.rules!!["1"]!!.name)
+    assertEquals("6655664454522131aaaeeaaeaeaeaea", root.rules!!["1"]!!.owner)
+    assertEquals("2017-07-14T14:04:04", root.rules!!["1"]!!.created)
+    assertEquals("2018-07-27T13:00:13", root.rules!!["1"]!!.lastTriggered)
+    assertEquals(5, root.rules!!["1"]!!.timesTriggered)
+    assertEquals("enabled", root.rules!!["1"]!!.status)
+    assertEquals(true, root.rules!!["1"]!!.isRecycle)
+    val conditions = root.rules!!["1"]!!.conditions
+    assertEquals(3, conditions!!.size)
+    assertEquals("/sensors/4/state/buttonevent", conditions[0].address)
+    assertEquals("eq", conditions[0].operator)
+    assertEquals("1000", conditions[0].value)
+    val actions = root.rules!!["1"]!!.actions
+    assertEquals(1, actions!!.size)
+    assertEquals("/groups/1/action", actions[0].address)
+    assertEquals("PUT", actions[0].method)
+    assertEquals(Collections.singletonMap("on", true), actions[0].body)
   }
 
   @Test
-  void testGetRawConfig() {
-    final Hue hue = createHueAndInitializeMockServer();
-    final BridgeConfig config = hue.getRaw().getConfig();
-    assertEquals(11, config.getZigbeeChannel());
-    assertEquals("00:17:11:22:33:aa", config.getMac());
-    assertEquals(true, config.isDhcp());
-    assertEquals("1.26.0", config.getApiVersion());
-    assertEquals("noupdates", config.getSoftwareUpdate2().getBridge().getState());
-    assertEquals(true, config.getPortalState().isSignedOn());
-    assertEquals(false, config.getPortalState().isIncoming());
-    assertEquals(true, config.getPortalState().isOutgoing());
-    assertEquals("disconnected", config.getPortalState().getCommunication());
-    assertEquals("2015-01-09T19:19:19", config.getWhiteList().get("6655664454522131aaaeeaaeaeaeaea").getCreateDate());
+  fun testGetRawConfig() {
+    val hue = createHueAndInitializeMockServer()
+    val config = hue.raw!!.config
+    assertEquals(11, config!!.zigbeeChannel)
+    assertEquals("00:17:11:22:33:aa", config.mac)
+    assertEquals(true, config.isDhcp)
+    assertEquals("1.26.0", config.apiVersion)
+    assertEquals("noupdates", config.softwareUpdate2!!.bridge!!.state)
+    assertEquals(true, config.portalState!!.isSignedOn)
+    assertEquals(false, config.portalState!!.isIncoming)
+    assertEquals(true, config.portalState!!.isOutgoing)
+    assertEquals("disconnected", config.portalState!!.communication)
+    assertEquals("2015-01-09T19:19:19", config.whiteList!!["6655664454522131aaaeeaaeaeaeaea"]!!.createDate)
   }
 
-  private String readFile(final String fileName) {
-    final ClassLoader classLoader = getClass().getClassLoader();
-    final File file = new File(classLoader.getResource(fileName).getFile());
+  private fun readFile(fileName: String): String {
+    val classLoader = javaClass.classLoader
+    val file = File(classLoader.getResource(fileName)!!.file)
     try {
-      return Files.lines(file.toPath()).collect(Collectors.joining());
-    } catch (final IOException e) {
-      throw new RuntimeException(e);
+      return Files.lines(file.toPath()).collect(Collectors.joining())
+    } catch (e: IOException) {
+      throw RuntimeException(e)
     }
+
+  }
+
+  companion object {
+    private val API_KEY = "abcd1234"
+    private val API_BASE_PATH = "/api/$API_KEY/"
+    private val MOTION_SENSOR_NAME = "Hallway sensor"
+    private val TEMPERATURE_SENSOR_NAME = "Hue temperature sensor 1"
+    private val DIMMER_SWITCH_NAME = "Living room door"
   }
 }

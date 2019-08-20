@@ -1,27 +1,10 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-public class ComponentSoftwareUpdate {
-  private String state;
-  private String lastinstall;
+class ComponentSoftwareUpdate {
+  var state: String? = null
+  var lastinstall: String? = null
 
-  public String getState() {
-    return state;
-  }
-
-  public void setState(String state) {
-    this.state = state;
-  }
-
-  public String getLastinstall() {
-    return lastinstall;
-  }
-
-  public void setLastinstall(String lastinstall) {
-    this.lastinstall = lastinstall;
-  }
-
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

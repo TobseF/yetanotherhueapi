@@ -1,35 +1,18 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty
 
-public class InternetServices {
+class InternetServices {
   @JsonProperty("internet")
-  private String internet;
+  val internet: String? = null
   @JsonProperty("remoteaccess")
-  private String remoteAccess;
+  val remoteAccess: String? = null
   @JsonProperty("time")
-  private String time;
+  val time: String? = null
   @JsonProperty("swupdate")
-  private String swupdate;
+  val swupdate: String? = null
 
-  public String getInternet() {
-    return internet;
-  }
-
-  public String getRemoteAccess() {
-    return remoteAccess;
-  }
-
-  public String getTime() {
-    return time;
-  }
-
-  public String getSwupdate() {
-    return swupdate;
-  }
-
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

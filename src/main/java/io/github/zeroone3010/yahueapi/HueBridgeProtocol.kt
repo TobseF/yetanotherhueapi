@@ -1,6 +1,6 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-public enum HueBridgeProtocol {
+enum class HueBridgeProtocol(internal val protocol: String) {
 
   /**
    * A regular HTTP connection.
@@ -12,15 +12,5 @@ public enum HueBridgeProtocol {
    * it is not possible to verify it. Using this enum value turns off the certificate
    * verification.
    */
-  UNVERIFIED_HTTPS("https");
-
-  private final String protocol;
-
-  HueBridgeProtocol(final String protocol) {
-    this.protocol = protocol;
-  }
-
-  String getProtocol() {
-    return protocol;
-  }
+  UNVERIFIED_HTTPS("https")
 }

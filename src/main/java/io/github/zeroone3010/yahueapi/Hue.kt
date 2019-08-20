@@ -1,114 +1,163 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.zeroone3010.yahueapi.domain.ApiInitializationStatus;
-import io.github.zeroone3010.yahueapi.domain.Group;
-import io.github.zeroone3010.yahueapi.domain.Root;
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.zeroone3010.yahueapi.domain.ApiInitializationStatus
+import io.github.zeroone3010.yahueapi.domain.Group
+import io.github.zeroone3010.yahueapi.domain.Root
+import java.io.IOException
+import java.net.MalformedURLException
+import java.net.URL
+import java.util.*
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
+class Hue
+/**
+ * A basic constructor for initializing the Hue Bridge connection for this library.
+ * Use the `hueBridgeConnectionBuilder` method if you do not have an API key yet.
+ *
+ * @param protocol The desired protocol for the Bridge connection. HTTP or UNVERIFIED_HTTPS,
+ * as the certificate that the Bridge uses cannot be verified. Defaults to HTTP
+ * when using the other constructor.
+ * @param bridgeIp The IP address of the Hue Bridge.
+ * @param apiKey   The API key of your application.
+ * @since 1.0.0
+ */
+(protocol: HueBridgeProtocol, bridgeIp: String, apiKey: String) {
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
+  private val objectMapper = ObjectMapper()
 
-public final class Hue {
-  private static final String ROOM_TYPE_GROUP = "Room";
-  private static final String ZONE_TYPE_GROUP = "Zone";
+  private val sensorFactory = SensorFactory(this, objectMapper)
+  private val roomFactory: RoomFactory
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
-
-  private final SensorFactory sensorFactory = new SensorFactory(this, objectMapper);
-  private final RoomFactory roomFactory;
-
-  private final String uri;
-  private Root root;
-  private Map<String, Room> rooms;
-  private Map<String, Room> zones;
-  private Map<String, Sensor> sensors;
-  private boolean caching = false;
-
-  /**
-   * The basic constructor for initializing the Hue Bridge connection for this library.
-   * Use the {@code hueBridgeConnectionBuilder} method if you do not have an API key yet.
-   *
-   * @param bridgeIp The IP address of the Hue Bridge.
-   * @param apiKey   The API key of your application.
-   * @since 1.0.0
-   */
-  public Hue(final String bridgeIp, final String apiKey) {
-    this(HueBridgeProtocol.HTTP, bridgeIp, apiKey);
-  }
-
-  /**
-   * <p>Controls whether cached states of objects, such as lights, should be used.
-   * Off ({@code false}) by default. If set on ({@code true}), querying light states will
-   * NOT actually relay the query to the Bridge. Instead, it uses the state that was valid
-   * when this method was called, or the state that was valid when subsequent calls to
-   * the {@link #refresh()} method were made.</p>
-   *
-   * <p>One should use caching when performing multiple queries in a quick succession,
-   * such as when querying the states of all the individual lights in a Hue setup.</p>
-   *
-   * <p>If caching is already on and you try to enable it again, this method does nothing.
-   * Similarly nothing happens if caching is already disabled and one tries to disable it again.</p>
-   *
-   * @param enabled Set to {@code true} to have the lights cache their results from the Bridge.
-   *                Remember to call {@link #refresh()} first when you need to retrieve the
-   *                absolutely current states.
-   * @since 1.2.0
-   */
-  public void setCaching(final boolean enabled) {
-    if (caching != enabled) {
-      caching = enabled;
-      refresh();
-    }
-  }
-
+  private val uri: String
+  private var root: Root? = null
+  private var rooms: Map<String, Room>? = null
+  private var zones: Map<String, Room>? = null
+  private var sensors: Map<String, Sensor>? = null
   /**
    * Tells whether this instance caches the states of objects, such as lights.
    *
-   * @return {@code true} if cached results are returned, {@code false} if all queries are directed to the Bridge.
+   * @return `true` if cached results are returned, `false` if all queries are directed to the Bridge.
    * @since 1.2.0
    */
-  public boolean isCaching() {
-    return caching;
-  }
+  /**
+   *
+   * Controls whether cached states of objects, such as lights, should be used.
+   * Off (`false`) by default. If set on (`true`), querying light states will
+   * NOT actually relay the query to the Bridge. Instead, it uses the state that was valid
+   * when this method was called, or the state that was valid when subsequent calls to
+   * the [.refresh] method were made.
+   *
+   *
+   * One should use caching when performing multiple queries in a quick succession,
+   * such as when querying the states of all the individual lights in a Hue setup.
+   *
+   *
+   * If caching is already on and you try to enable it again, this method does nothing.
+   * Similarly nothing happens if caching is already disabled and one tries to disable it again.
+   *
+   * @param enabled Set to `true` to have the lights cache their results from the Bridge.
+   * Remember to call [.refresh] first when you need to retrieve the
+   * absolutely current states.
+   * @since 1.2.0
+   */
+  var isCaching = false
+    set(enabled) {
+      if (isCaching != enabled) {
+        field = enabled
+        refresh()
+      }
+    }
 
   /**
-   * A basic constructor for initializing the Hue Bridge connection for this library.
-   * Use the {@code hueBridgeConnectionBuilder} method if you do not have an API key yet.
+   * Returns the raw root node information of the REST API. Not required for anything but querying the most
+   * technical details of the Bridge setup. Note that it is not possible to change the state of the Bridge or
+   * the lights by using any values returned by this method: the results are read-only.
    *
-   * @param protocol The desired protocol for the Bridge connection. HTTP or UNVERIFIED_HTTPS,
-   *                 as the certificate that the Bridge uses cannot be verified. Defaults to HTTP
-   *                 when using the other constructor.
+   * The results of this method are also always cached, so a call to this method never triggers a query to the Bridge
+   * (unless no other queries have been made to the Bridge since this instance of `Hue` was constructed).
+   * To refresh the cache call the [.refresh] method.
+   *
+   * @return A Root element, as received from the Bridge REST API. Always returns a cached version of the data.
+   *
+   * @since 1.0.0
+   */
+  val raw: Root?
+    get() {
+      doInitialDataLoadIfRequired()
+      return this.root
+    }
+
+  /**
+   * Returns all the sensors configured into the Bridge.
+   *
+   * @return A Collection of sensors.
+   * @since 1.0.0
+   */
+  val unknownSensors: Collection<Sensor>
+    get() = getSensorsByType(SensorType.UNKNOWN, Sensor::class.java)
+
+  /**
+   * Returns all the temperature sensors configured into the Bridge.
+   *
+   * @return A Collection of temperature sensors.
+   * @since 1.0.0
+   */
+  val temperatureSensors: Collection<TemperatureSensor>
+    get() = getSensorsByType(SensorType.TEMPERATURE, TemperatureSensor::class.java)
+
+  /**
+   * Returns all the dimmer switches configured into the Bridge.
+   *
+   * @return A Collection of dimmer switches.
+   * @since 1.0.0
+   */
+  val dimmerSwitches: Collection<DimmerSwitch>
+    get() = getSensorsByType(SensorType.DIMMER_SWITCH, DimmerSwitch::class.java)
+
+  /**
+   * Returns all the motion sensors configured into the Bridge.
+   *
+   * @return A Collection of motion sensors.
+   * @since 1.0.0
+   */
+  val motionSensors: Collection<MotionSensor>
+    get() = getSensorsByType(SensorType.MOTION, MotionSensor::class.java)
+
+  /**
+   * Returns all the daylight sensors configured into the Bridge.
+   *
+   * @return A Collection of daylight sensors.
+   * @since 1.0.0
+   */
+  val daylightSensors: Collection<DaylightSensor>
+    get() = getSensorsByType(SensorType.DAYLIGHT, DaylightSensor::class.java)
+
+  /**
+   * The basic constructor for initializing the Hue Bridge connection for this library.
+   * Use the `hueBridgeConnectionBuilder` method if you do not have an API key yet.
+   *
    * @param bridgeIp The IP address of the Hue Bridge.
    * @param apiKey   The API key of your application.
    * @since 1.0.0
    */
-  public Hue(final HueBridgeProtocol protocol, final String bridgeIp, final String apiKey) {
-    this.uri = protocol.getProtocol() + "://" + bridgeIp + "/api/" + apiKey + "/";
-    if (HueBridgeProtocol.UNVERIFIED_HTTPS.equals(protocol)) {
-      TrustEverythingManager.trustAllSslConnectionsByDisablingCertificateVerification();
+  constructor(bridgeIp: String, apiKey: String) : this(HueBridgeProtocol.HTTP, bridgeIp, apiKey)
+
+  init {
+    this.uri = protocol.protocol + "://" + bridgeIp + "/api/" + apiKey + "/"
+    if (HueBridgeProtocol.UNVERIFIED_HTTPS == protocol) {
+      TrustEverythingManager.trustAllSslConnectionsByDisablingCertificateVerification()
     }
-    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    roomFactory = new RoomFactory(this, objectMapper, uri);
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    roomFactory = RoomFactory(this, objectMapper, uri)
   }
 
-  private void doInitialDataLoadIfRequired() {
+  private fun doInitialDataLoadIfRequired() {
     if (root == null) {
-      refresh();
+      refresh()
     }
   }
 
@@ -117,29 +166,28 @@ public final class Hue {
    * it has been updated since the application was started.
    *
    * This method is particularly useful if caching is enabled
-   * with the {@link #setCaching(boolean)} method. Calls to {@code refresh()}
+   * with the [.setCaching] method. Calls to `refresh()`
    * will, in that case, refresh the states of the lights.
    *
    * @since 1.0.0
    */
-  public void refresh() {
+  fun refresh() {
     try {
-      root = objectMapper.readValue(new URL(uri), Root.class);
-    } catch (final IOException e) {
-      throw new HueApiException(e);
+      root = objectMapper.readValue<Root>(URL(uri), Root::class.java)
+    } catch (e: IOException) {
+      throw HueApiException(e)
     }
-    this.rooms = Collections.unmodifiableMap(findGroupsOfType(ROOM_TYPE_GROUP));
-    this.zones = Collections.unmodifiableMap(findGroupsOfType(ZONE_TYPE_GROUP));
-    this.sensors = Collections.unmodifiableMap(root.getSensors().entrySet().stream()
-        .map(sensor -> buildSensor(sensor.getKey(), root))
-        .collect(toMap(Sensor::getId, sensor -> sensor)));
+
+    this.rooms = Collections.unmodifiableMap(findGroupsOfType(ROOM_TYPE_GROUP))
+    this.zones = Collections.unmodifiableMap(findGroupsOfType(ZONE_TYPE_GROUP))
+
+    this.sensors = root!!.sensors!!.entries.map { sensor -> buildSensor(sensor.key, root!!) }.map { it.id to it }.toMap()
   }
 
-  private Map<String, Room> findGroupsOfType(final String groupType) {
-    return root.getGroups().entrySet().stream()
-        .filter(g -> g.getValue().getType().equals(groupType))
-        .map(group -> buildRoom(group.getKey(), group.getValue(), root))
-        .collect(toMap(Room::getName, room -> room));
+  private fun findGroupsOfType(groupType: String): Map<String, Room> {
+    return root!!.groups!!.entries
+        .filter { it.value.type == groupType }
+        .map { group -> buildRoom(group.key, group.value, root!!) }.map { it.name!! to it }.toMap()
   }
 
   /**
@@ -148,9 +196,9 @@ public final class Hue {
    * @return A Collection of rooms.
    * @since 1.0.0
    */
-  public Collection<Room> getRooms() {
-    doInitialDataLoadIfRequired();
-    return Collections.unmodifiableCollection(this.rooms.values());
+  fun getRooms(): Collection<Room> {
+    doInitialDataLoadIfRequired()
+    return Collections.unmodifiableCollection(this.rooms!!.values)
   }
 
   /**
@@ -159,227 +207,156 @@ public final class Hue {
    * @return A Collection of zones as Room objects.
    * @since 1.1.0
    */
-  public Collection<Room> getZones() {
-    doInitialDataLoadIfRequired();
-    return Collections.unmodifiableCollection(this.zones.values());
+  fun getZones(): Collection<Room> {
+    doInitialDataLoadIfRequired()
+    return Collections.unmodifiableCollection(this.zones!!.values)
   }
 
   /**
    * Returns a specific room by its name.
    *
    * @param roomName The name of a room
-   * @return A room or {@code Optional.empty()} if a room with the given name does not exist.
+   * @return A room or `Optional.empty()` if a room with the given name does not exist.
    * @since 1.0.0
    */
-  public Optional<Room> getRoomByName(final String roomName) {
-    doInitialDataLoadIfRequired();
-    return Optional.ofNullable(this.rooms.get(roomName));
+  fun getRoomByName(roomName: String): Room? {
+    doInitialDataLoadIfRequired()
+    return this.rooms!![roomName]
   }
 
   /**
    * Returns a specific zone by its name.
    *
    * @param zoneName The name of a zone
-   * @return A zone or {@code Optional.empty()} if a zone with the given name does not exist.
+   * @return A zone or `Optional.empty()` if a zone with the given name does not exist.
    * @since 1.1.0
    */
-  public Optional<Room> getZoneByName(final String zoneName) {
-    doInitialDataLoadIfRequired();
-    return Optional.ofNullable(this.zones.get(zoneName));
+  fun getZoneByName(zoneName: String): Room? {
+    doInitialDataLoadIfRequired()
+    return this.zones!![zoneName]
   }
 
-  private Room buildRoom(final String groupId, final Group group, final Root root) {
-    return roomFactory.buildRoom(groupId, group, root);
+  private fun buildRoom(groupId: String, group: Group, root: Root): Room {
+    return roomFactory.buildRoom(groupId, group, root)
   }
 
-  private Sensor buildSensor(final String sensorId, final Root root) {
-    return sensorFactory.buildSensor(sensorId, root.getSensors().get(sensorId), uri);
+  private fun buildSensor(sensorId: String, root: Root): Sensor {
+    return sensorFactory.buildSensor(sensorId, root.sensors!![sensorId], uri)
   }
 
-  /**
-   * Returns the raw root node information of the REST API. Not required for anything but querying the most
-   * technical details of the Bridge setup. Note that it is not possible to change the state of the Bridge or
-   * the lights by using any values returned by this method: the results are read-only.
-   *
-   * The results of this method are also always cached, so a call to this method never triggers a query to the Bridge
-   * (unless no other queries have been made to the Bridge since this instance of {@code Hue} was constructed).
-   * To refresh the cache call the {@link #refresh()} method.
-   *
-   * @return A Root element, as received from the Bridge REST API. Always returns a cached version of the data.
-   *
-   * @since 1.0.0
-   */
-  public Root getRaw() {
-    doInitialDataLoadIfRequired();
-    return this.root;
-  }
-
-  /**
-   * Returns all the sensors configured into the Bridge.
-   *
-   * @return A Collection of sensors.
-   * @since 1.0.0
-   */
-  public Collection<Sensor> getUnknownSensors() {
-    return getSensorsByType(SensorType.UNKNOWN, Sensor.class);
-  }
-
-  /**
-   * Returns all the temperature sensors configured into the Bridge.
-   *
-   * @return A Collection of temperature sensors.
-   * @since 1.0.0
-   */
-  public Collection<TemperatureSensor> getTemperatureSensors() {
-    return getSensorsByType(SensorType.TEMPERATURE, TemperatureSensor.class);
-  }
-
-  /**
-   * Returns all the dimmer switches configured into the Bridge.
-   *
-   * @return A Collection of dimmer switches.
-   * @since 1.0.0
-   */
-  public Collection<DimmerSwitch> getDimmerSwitches() {
-    return getSensorsByType(SensorType.DIMMER_SWITCH, DimmerSwitch.class);
-  }
-
-  /**
-   * Returns all the motion sensors configured into the Bridge.
-   *
-   * @return A Collection of motion sensors.
-   * @since 1.0.0
-   */
-  public Collection<MotionSensor> getMotionSensors() {
-    return getSensorsByType(SensorType.MOTION, MotionSensor.class);
-  }
-
-  /**
-   * Returns all the daylight sensors configured into the Bridge.
-   *
-   * @return A Collection of daylight sensors.
-   * @since 1.0.0
-   */
-  public Collection<DaylightSensor> getDaylightSensors() {
-    return getSensorsByType(SensorType.DAYLIGHT, DaylightSensor.class);
-  }
-
-  private <T> Collection<T> getSensorsByType(final SensorType type, final Class<T> sensorClass) {
-    doInitialDataLoadIfRequired();
-    return Collections.unmodifiableCollection(this.sensors.values().stream()
-        .filter(s -> type.equals(s.getType()))
-        .map(sensorClass::cast)
-        .collect(toList()));
+  private fun <T> getSensorsByType(type: SensorType, sensorClass: Class<T>): Collection<T> {
+    doInitialDataLoadIfRequired()
+    return this.sensors!!.values.filter { s -> type == s.type }.map { sensorClass.cast(it) }.toList()
   }
 
   /**
    * Returns a specific temperature sensor by its name.
    *
    * @param sensorName The name of a sensor
-   * @return A sensor or {@code Optional.empty()} if a sensor with the given name does not exist.
+   * @return A sensor or `Optional.empty()` if a sensor with the given name does not exist.
    * @since 1.0.0
    */
-  public Optional<TemperatureSensor> getTemperatureSensorByName(final String sensorName) {
-    doInitialDataLoadIfRequired();
-    return getTemperatureSensors().stream()
-        .filter(sensor -> Objects.equals(sensor.getName(), sensorName))
-        .map(TemperatureSensor.class::cast)
-        .findFirst();
+  fun getTemperatureSensorByName(sensorName: String): TemperatureSensor? {
+    doInitialDataLoadIfRequired()
+    return temperatureSensors.firstOrNull { sensor -> sensor.name == sensorName }
   }
 
   /**
    * Returns a specific motion sensor by its name.
    *
    * @param sensorName The name of a sensor
-   * @return A sensor or {@code Optional.empty()} if a sensor with the given name does not exist.
+   * @return A sensor or `Optional.empty()` if a sensor with the given name does not exist.
    * @since 1.0.0
    */
-  public Optional<MotionSensor> getMotionSensorByName(final String sensorName) {
-    doInitialDataLoadIfRequired();
-    return getMotionSensors().stream()
-        .filter(sensor -> Objects.equals(sensor.getName(), sensorName))
-        .map(MotionSensor.class::cast)
-        .findFirst();
+  fun getMotionSensorByName(sensorName: String): MotionSensor? {
+    doInitialDataLoadIfRequired()
+    return motionSensors.firstOrNull { sensor -> sensor.name == sensorName }
   }
 
   /**
    * Returns a specific dimmer switch by its name.
    *
    * @param switchName The name of a switch
-   * @return A dimmer switch or {@code Optional.empty()} if a dimmer switch with the given name does not exist.
+   * @return A dimmer switch or `Optional.empty()` if a dimmer switch with the given name does not exist.
    * @since 1.0.0
    */
-  public Optional<DimmerSwitch> getDimmerSwitchByName(final String switchName) {
-    doInitialDataLoadIfRequired();
-    return getDimmerSwitches().stream()
-        .filter(sensor -> Objects.equals(sensor.getName(), switchName))
-        .map(DimmerSwitch.class::cast)
-        .findFirst();
+  fun getDimmerSwitchByName(switchName: String): DimmerSwitch? {
+    doInitialDataLoadIfRequired()
+    return dimmerSwitches.firstOrNull { sensor -> sensor.name == switchName }
   }
 
-  /**
-   * The method to be used if you do not have an API key for your application yet.
-   * Returns a {@code HueBridgeConnectionBuilder} that initializes the process of
-   * adding a new application to the Bridge.
-   *
-   * @param bridgeIp The IP address of the Bridge.
-   * @return A connection builder that initializes the application for the Bridge.
-   * @since 1.0.0
-   */
-  public static HueBridgeConnectionBuilder hueBridgeConnectionBuilder(final String bridgeIp) {
-    return new HueBridgeConnectionBuilder(bridgeIp);
-  }
-
-  public static class HueBridgeConnectionBuilder {
-    private static final int MAX_TRIES = 30;
-    private String bridgeIp;
-
-    private HueBridgeConnectionBuilder(final String bridgeIp) {
-      this.bridgeIp = bridgeIp;
-    }
+  class HueBridgeConnectionBuilder constructor(private val bridgeIp: String) {
 
     /**
-     * Returns a {@code CompletableFuture} that completes once you push the button on the Hue Bridge. Returns an API
+     * Returns a `CompletableFuture` that completes once you push the button on the Hue Bridge. Returns an API
      * key that you should use for any subsequent calls to the Bridge API.
      *
      * @param appName The name of your application.
-     * @return A {@code CompletableFuture} with an API key for your application. You should store this key for future usage.
+     * @return A `CompletableFuture` with an API key for your application. You should store this key for future usage.
      * @since 1.0.0
      */
-    public CompletableFuture<String> initializeApiConnection(final String appName) {
-      final Supplier<String> apiKeySupplier = () -> {
-        final String body = "{\"devicetype\":\"yetanotherhueapi#" + appName + "\"}";
-        final URL baseUrl;
+    fun initializeApiConnection(appName: String): CompletableFuture<String?> {
+      return CompletableFuture.supplyAsync { geetApiKey(appName) }
+    }
+
+    companion object {
+      private val MAX_TRIES = 30
+    }
+
+    fun geetApiKey(appName: String): String? {
+
+      val body = "{\"devicetype\":\"yetanotherhueapi#$appName\"}"
+      val baseUrl: URL
+      try {
+        baseUrl = URL("http://$bridgeIp/api")
+      } catch (e: MalformedURLException) {
+        throw HueApiException(e)
+      }
+
+      var latestError: String? = null
+      for (triesLeft in HueBridgeConnectionBuilder.MAX_TRIES downTo 1) {
         try {
-          baseUrl = new URL("http://" + bridgeIp + "/api");
-        } catch (final MalformedURLException e) {
-          throw new HueApiException(e);
-        }
+          println("Please push the button on the Hue Bridge now ($triesLeft seconds left).")
 
-        String latestError = null;
-        for (int triesLeft = MAX_TRIES; triesLeft > 0; triesLeft--) {
-          try {
-            System.out.println("Please push the button on the Hue Bridge now (" + triesLeft + " seconds left).");
+          val result = HttpUtil.post(baseUrl, "", body)
+          println(result)
+          val status = ObjectMapper().readValue<ArrayList<ApiInitializationStatus>>(result,
+              object : TypeReference<ArrayList<ApiInitializationStatus>>() {
 
-            final String result = HttpUtil.post(baseUrl, "", body);
-            System.out.println(result);
-            final ApiInitializationStatus status = new ObjectMapper().<ArrayList<ApiInitializationStatus>>readValue(result,
-                new TypeReference<ArrayList<ApiInitializationStatus>>() {
-                }).get(0);
-
-            if (status.getSuccess() != null) {
-              return status.getSuccess().getUsername();
-            }
-            latestError = status.getError().getDescription();
-            TimeUnit.SECONDS.sleep(1L);
-
-          } catch (final Exception e) {
-            throw new HueApiException(e);
+              })[0]
+          status.success?.let {
+            return it.username
           }
+
+
+          latestError = status.error!!.description
+          TimeUnit.SECONDS.sleep(1L)
+
+        } catch (e: Exception) {
+          throw HueApiException(e)
         }
-        throw new HueApiException(latestError);
-      };
-      return CompletableFuture.supplyAsync(apiKeySupplier);
+
+      }
+      throw HueApiException(latestError ?: "")
+    }
+  }
+
+
+  companion object {
+    private val ROOM_TYPE_GROUP = "Room"
+    private val ZONE_TYPE_GROUP = "Zone"
+
+    /**
+     * The method to be used if you do not have an API key for your application yet.
+     * Returns a `HueBridgeConnectionBuilder` that initializes the process of
+     * adding a new application to the Bridge.
+     *
+     * @param bridgeIp The IP address of the Bridge.
+     * @return A connection builder that initializes the application for the Bridge.
+     * @since 1.0.0
+     */
+    fun hueBridgeConnectionBuilder(bridgeIp: String): HueBridgeConnectionBuilder {
+      return HueBridgeConnectionBuilder(bridgeIp)
     }
   }
 }

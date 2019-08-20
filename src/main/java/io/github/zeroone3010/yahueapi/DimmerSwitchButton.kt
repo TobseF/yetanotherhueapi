@@ -1,28 +1,22 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import java.util.stream.Stream;
+import java.util.stream.Stream
 
-public enum DimmerSwitchButton {
+enum class DimmerSwitchButton constructor(val buttonNumber: Int) {
   ON(1),
   DIM_UP(2),
   DIM_DOWN(3),
   OFF(4);
 
-  private final int buttonNumber;
 
-  DimmerSwitchButton(final int buttonNumber) {
-    this.buttonNumber = buttonNumber;
-  }
+  companion object {
 
-  public int getButtonNumber() {
-    return buttonNumber;
-  }
-
-  static DimmerSwitchButton parseFromButtonEventCode(final int buttonEvent) {
-    final int buttonNumber = buttonEvent / 1000;
-    return Stream.of(values())
-        .filter(value -> value.getButtonNumber() == buttonNumber)
-        .findFirst()
-        .orElseThrow(() -> new IllegalArgumentException("Cannot parse button event " + buttonEvent));
+    fun parseFromButtonEventCode(buttonEvent: Int): DimmerSwitchButton {
+      val buttonNumber = buttonEvent / 1000
+      return Stream.of(*values())
+          .filter { value -> value.buttonNumber == buttonNumber }
+          .findFirst()
+          .orElseThrow { IllegalArgumentException("Cannot parse button event $buttonEvent") }
+    }
   }
 }

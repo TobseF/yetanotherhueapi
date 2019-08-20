@@ -1,133 +1,34 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty
 
-import java.util.Map;
-
-public class SensorDto {
+class SensorDto {
   @JsonProperty("name")
-  private String name;
+  var name: String? = null
   @JsonProperty("type")
-  private String type;
+  var type: String? = null
   @JsonProperty("state")
-  private Map<String, Object> state;
+  var state: Map<String, Any>? = null
   @JsonProperty("swupdate")
-  private ComponentSoftwareUpdate softwareUpdate;
+  var softwareUpdate: ComponentSoftwareUpdate? = null
   @JsonProperty("config")
-  private Map<String, Object> config;
+  var config: Map<String, Any>? = null
   @JsonProperty("modelid")
-  private String modelId;
+  var modelId: String? = null
   @JsonProperty("manufacturername")
-  private String manufacturerName;
+  var manufacturerName: String? = null
   @JsonProperty("swversion")
-  private String softwareVersion;
+  var softwareVersion: String? = null
   @JsonProperty("uniqueid")
-  private String uniqueId;
+  var uniqueId: String? = null
   @JsonProperty("recycle")
-  private Boolean recycle;
+  var recycle: Boolean? = null
   @JsonProperty("productname")
-  private String productName;
+  var productName: String? = null
   @JsonProperty("capabilities")
-  private Map<String, Object> capabilities;
+  var capabilities: Map<String, Any>? = null
 
-  public Map<String, Object> getState() {
-    return state;
-  }
-
-  public void setState(Map<String, Object> state) {
-    this.state = state;
-  }
-
-  public ComponentSoftwareUpdate getSoftwareUpdate() {
-    return softwareUpdate;
-  }
-
-  public void setSoftwareUpdate(ComponentSoftwareUpdate softwareUpdate) {
-    this.softwareUpdate = softwareUpdate;
-  }
-
-  public Map<String, Object> getConfig() {
-    return config;
-  }
-
-  public void setConfig(Map<String, Object> config) {
-    this.config = config;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public String getType() {
-    return type;
-  }
-
-  public void setType(String type) {
-    this.type = type;
-  }
-
-  public String getModelId() {
-    return modelId;
-  }
-
-  public void setModelId(String modelId) {
-    this.modelId = modelId;
-  }
-
-  public String getManufacturerName() {
-    return manufacturerName;
-  }
-
-  public void setManufacturerName(String manufacturerName) {
-    this.manufacturerName = manufacturerName;
-  }
-
-  public String getSoftwareVersion() {
-    return softwareVersion;
-  }
-
-  public void setSoftwareVersion(String softwareVersion) {
-    this.softwareVersion = softwareVersion;
-  }
-
-  public String getUniqueId() {
-    return uniqueId;
-  }
-
-  public void setUniqueId(String uniqueId) {
-    this.uniqueId = uniqueId;
-  }
-
-  public Boolean getRecycle() {
-    return recycle;
-  }
-
-  public void setRecycle(Boolean recycle) {
-    this.recycle = recycle;
-  }
-
-  public String getProductName() {
-    return productName;
-  }
-
-  public void setProductName(String productName) {
-    this.productName = productName;
-  }
-
-  public Map<String, Object> getCapabilities() {
-    return capabilities;
-  }
-
-  public void setCapabilities(Map<String, Object> capabilities) {
-    this.capabilities = capabilities;
-  }
-
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

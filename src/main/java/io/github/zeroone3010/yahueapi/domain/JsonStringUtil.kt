@@ -1,18 +1,17 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.ObjectMapper
 
-final class JsonStringUtil {
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+internal object JsonStringUtil {
+  private val objectMapper = ObjectMapper()
 
-  private JsonStringUtil() { /* prevent */ }
-
-  static String toJsonString(final Object object) {
+  fun toJsonString(`object`: Any): String {
     try {
-      return objectMapper.writeValueAsString(object);
-    } catch (final JsonProcessingException e) {
-      throw new RuntimeException(e);
+      return objectMapper.writeValueAsString(`object`)
+    } catch (e: JsonProcessingException) {
+      throw RuntimeException(e)
     }
+
   }
-}
+}/* prevent */

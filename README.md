@@ -1,13 +1,17 @@
-Yet Another Hue API
-===================
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.zeroone3010/yetanotherhueapi.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22io.github.zeroone3010%22%20AND%20a:%22yetanotherhueapi%22)
+# Yet Another Kotlin Hue API
 
-This is a Java 8 API for the Philips Hue lights.<sup>1</sup> It does not use the official 
+This is a Kotlin API for the Philips Hue lights.<sup>1</sup> It does not use the official 
 Hue SDK but instead accesses the REST API of the Philips Hue Bridge directly.
 This library has been confirmed to work with the Philips Hue Bridge API version 1.32.0.
 
-Usage
------
+The code is a fork of [ZeroOne3010/yetanotherhueapi](https://github.com/ZeroOne3010/yetanotherhueapi) with a to Kotlin conversation.
+
+### The main advantages
+ * Android Support - no `java.awt.Color` dependency
+ * Plain Kotlin API without `Optionals`
+ * Android API level 9 instead of 26 
+
+## Usage
 
 First, import the classes from this library:
 
@@ -70,21 +74,19 @@ there is no need to get the `Light`, `Room` or `Sensor` from the `Hue` object ag
 object reference all the time. Objects that return a cached state will accept and execute state changes (calls to 
 the `setState` method) just fine, but they will *not* update their cached state with those calls.
 
-Including the library with Maven
---------------------------------
+## Including the library with Maven
 
 Add the following dependency to your pom.xml file:
 
 ```xml
 <dependency>
-    <groupId>io.github.zeroone3010</groupId>
+    <groupId>io.github.tobsef</groupId>
     <artifactId>yetanotherhueapi</artifactId>
     <version>1.2.0</version>
 </dependency>
 ```
 
-Scope and philosophy
---------------------
+## Scope and philosophy
 
 This library is not intended to have all the possible functionality of the SDK
 or the REST API. Instead it is focusing on the essentials: querying and setting
@@ -93,18 +95,15 @@ essential functions well: in an intuitive and usable way for the programmer.
 The number of external dependencies should be kept to a minimum.
 Version numbering follows the [Semantic Versioning](https://semver.org/).
 
-Contributing
-------------
+## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Version history
----------------
+## Version history
 
 See [CHANGELOG.md](CHANGELOG.md).
 
-This project elsewhere
-----------------------
+## This project elsewhere
 * [Black Duck Open Hub](https://www.openhub.net/p/yetanotherhueapi)
 * [Code Climate](https://codeclimate.com/github/ZeroOne3010/yetanotherhueapi)
 

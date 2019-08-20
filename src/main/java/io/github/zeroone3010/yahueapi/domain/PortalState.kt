@@ -1,51 +1,18 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty
 
-public class PortalState {
+class PortalState {
   @JsonProperty("signedon")
-  private boolean signedOn;
+  var isSignedOn: Boolean = false
   @JsonProperty("incoming")
-  private boolean incoming;
+  var isIncoming: Boolean = false
   @JsonProperty("outgoing")
-  private boolean outgoing;
+  var isOutgoing: Boolean = false
   @JsonProperty("communication")
-  private String communication;
+  var communication: String? = null
 
-  public boolean isSignedOn() {
-    return signedOn;
-  }
-
-  public void setSignedOn(boolean signedOn) {
-    this.signedOn = signedOn;
-  }
-
-  public boolean isIncoming() {
-    return incoming;
-  }
-
-  public void setIncoming(boolean incoming) {
-    this.incoming = incoming;
-  }
-
-  public boolean isOutgoing() {
-    return outgoing;
-  }
-
-  public void setOutgoing(boolean outgoing) {
-    this.outgoing = outgoing;
-  }
-
-  public String getCommunication() {
-    return communication;
-  }
-
-  public void setCommunication(String communication) {
-    this.communication = communication;
-  }
-
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

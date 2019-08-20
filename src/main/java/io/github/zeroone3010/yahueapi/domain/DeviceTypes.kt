@@ -1,19 +1,16 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty
 
-import java.util.List;
-
-public class DeviceTypes {
+class DeviceTypes {
   @JsonProperty("bridge")
-  private boolean bridge;
+  private val bridge: Boolean = false
   @JsonProperty("lights")
-  private List<Object> lights;
+  private val lights: List<Any>? = null
   @JsonProperty("sensors")
-  private List<Object> sensors;
+  private val sensors: List<Any>? = null
 
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

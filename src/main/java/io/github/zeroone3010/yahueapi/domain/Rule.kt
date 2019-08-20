@@ -1,67 +1,28 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty
 
-import java.util.List;
-
-public class Rule {
+class Rule {
   @JsonProperty("name")
-  private String name;
+  val name: String? = null
   @JsonProperty("owner")
-  private String owner;
+  val owner: String? = null
   @JsonProperty("created")
-  private String created;
+  val created: String? = null
   @JsonProperty("lasttriggered")
-  private String lastTriggered;
+  val lastTriggered: String? = null
   @JsonProperty("timestriggered")
-  private int timesTriggered;
+  val timesTriggered: Int = 0
   @JsonProperty("status")
-  private String status;
+  val status: String? = null
   @JsonProperty("recycle")
-  private boolean recycle;
+  val isRecycle: Boolean = false
   @JsonProperty("conditions")
-  private List<RuleCondition> conditions;
+  val conditions: List<RuleCondition>? = null
   @JsonProperty("actions")
-  private List<RuleAction> actions;
+  val actions: List<RuleAction>? = null
 
-  public String getName() {
-    return name;
-  }
-
-  public String getOwner() {
-    return owner;
-  }
-
-  public String getCreated() {
-    return created;
-  }
-
-  public String getLastTriggered() {
-    return lastTriggered;
-  }
-
-  public int getTimesTriggered() {
-    return timesTriggered;
-  }
-
-  public String getStatus() {
-    return status;
-  }
-
-  public boolean isRecycle() {
-    return recycle;
-  }
-
-  public List<RuleCondition> getConditions() {
-    return conditions;
-  }
-
-  public List<RuleAction> getActions() {
-    return actions;
-  }
-
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

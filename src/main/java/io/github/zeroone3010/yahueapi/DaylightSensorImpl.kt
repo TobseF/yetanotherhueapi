@@ -1,27 +1,18 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import io.github.zeroone3010.yahueapi.domain.SensorDto;
+import io.github.zeroone3010.yahueapi.domain.SensorDto
+import java.net.URL
 
-import java.net.URL;
-import java.util.Map;
-import java.util.function.Supplier;
+internal class DaylightSensorImpl(id: String, sensor: SensorDto, url: URL, stateProvider: () -> Map<String, Any>?) : BasicSensor(id, sensor, url, stateProvider), DaylightSensor {
 
-final class DaylightSensorImpl extends BasicSensor implements DaylightSensor {
-  DaylightSensorImpl(final String id, final SensorDto sensor, final URL url, final Supplier<Map<String, Object>> stateProvider) {
-    super(id, sensor, url, stateProvider);
-  }
+  override val isDaylightTime: Boolean
+    get() = readStateValue("daylight", Boolean::class.java)
 
-  @Override
-  public String toString() {
+  override fun toString(): String {
     return "DaylightSensor{" +
-        "id='" + super.id + '\'' +
-        ", name='" + super.name + '\'' +
+        "id='" + super.id + '\''.toString() +
+        ", name='" + super.name + '\''.toString() +
         ", type=" + super.type +
-        '}';
-  }
-
-  @Override
-  public boolean isDaylightTime() {
-    return readStateValue("daylight", Boolean.class);
+        '}'.toString()
   }
 }

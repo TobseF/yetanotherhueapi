@@ -1,31 +1,14 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty
 
-public class GroupState {
+class GroupState {
   @JsonProperty("all_on")
-  private boolean allOn;
+  var isAllOn: Boolean = false
   @JsonProperty("any_on")
-  private boolean anyOn;
+  var isAnyOn: Boolean = false
 
-  public boolean isAllOn() {
-    return allOn;
-  }
-
-  public void setAllOn(boolean allOn) {
-    this.allOn = allOn;
-  }
-
-  public boolean isAnyOn() {
-    return anyOn;
-  }
-
-  public void setAnyOn(boolean anyOn) {
-    this.anyOn = anyOn;
-  }
-
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

@@ -1,36 +1,29 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import io.github.zeroone3010.yahueapi.domain.SensorDto;
+import io.github.zeroone3010.yahueapi.domain.SensorDto
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.net.URL
+import java.util.logging.Logger
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.net.URL;
-import java.util.Map;
-import java.util.function.Supplier;
-import java.util.logging.Logger;
+internal class TemperatureSensorImpl(id: String, sensor: SensorDto, url: URL, stateProvider: () -> Map<String, Any>?) : BasicSensor(id, sensor, url, stateProvider), TemperatureSensor {
 
-final class TemperatureSensorImpl extends BasicSensor implements TemperatureSensor {
-  private static final Logger logger = Logger.getLogger("MotionSensorImpl");
+  override val degreesCelsius: BigDecimal
+    get() = convertCenticelsiusToCelsius(readStateValue("temperature", Int::class.java))
 
-  TemperatureSensorImpl(final String id, final SensorDto sensor, final URL url, final Supplier<Map<String, Object>> stateProvider) {
-    super(id, sensor, url, stateProvider);
-  }
-
-  @Override
-  public String toString() {
+  override fun toString(): String {
     return "TemperatureSensor{" +
-        "id='" + super.id + '\'' +
-        ", name='" + super.name + '\'' +
+        "id='" + super.id + '\''.toString() +
+        ", name='" + super.name + '\''.toString() +
         ", type=" + super.type +
-        '}';
+        '}'.toString()
   }
 
-  @Override
-  public BigDecimal getDegreesCelsius() {
-    return convertCenticelsiusToCelsius(readStateValue("temperature", Integer.class));
-  }
+  companion object {
+    private val logger = Logger.getLogger("MotionSensorImpl")
 
-  private static BigDecimal convertCenticelsiusToCelsius(final int centicelsius) {
-    return BigDecimal.valueOf(centicelsius).divide(BigDecimal.valueOf(100L), 2, RoundingMode.HALF_UP);
+    private fun convertCenticelsiusToCelsius(centicelsius: Int): BigDecimal {
+      return BigDecimal.valueOf(centicelsius.toLong()).divide(BigDecimal.valueOf(100L), 2, RoundingMode.HALF_UP)
+    }
   }
 }

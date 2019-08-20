@@ -1,11 +1,7 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-final class HueApiException extends RuntimeException {
-  HueApiException(final Throwable cause) {
-    super(cause);
-  }
+internal class HueApiException : RuntimeException {
+  constructor(cause: Throwable) : super(cause)
 
-  HueApiException(final String message) {
-    super(message);
-  }
+  constructor(message: String) : super(message)
 }

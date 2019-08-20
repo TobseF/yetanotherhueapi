@@ -1,27 +1,10 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-public class Startup {
-  private StartupMode mode;
-  private boolean configured;
+class Startup {
+  var mode: StartupMode? = null
+  var isConfigured: Boolean = false
 
-  public StartupMode getMode() {
-    return mode;
-  }
-
-  public void setMode(StartupMode mode) {
-    this.mode = mode;
-  }
-
-  public boolean isConfigured() {
-    return configured;
-  }
-
-  public void setConfigured(boolean configured) {
-    this.configured = configured;
-  }
-
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

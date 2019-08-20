@@ -1,8 +1,7 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-public class Schedule {
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+class Schedule {
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

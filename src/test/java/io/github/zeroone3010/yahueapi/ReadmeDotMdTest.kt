@@ -1,146 +1,126 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.Test;
+import org.junit.Ignore
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
+import java.io.*
+import java.net.URL
+import java.util.*
+import java.util.logging.Logger
+import javax.tools.ToolProvider
 
-import javax.tools.JavaCompiler;
-import javax.tools.ToolProvider;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
+internal class ReadmeDotMdTest {
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-class ReadmeDotMdTest {
-  private static final String COMMENT_LINE_START = "[//]: # (";
-  private static final String COMMENT_LINE_END = ")";
-  private static final String CODE_REQUIRES = "requires-";
-  private static final String CODE_THROWS = "throws-";
-  private static final String CODE_IMPORTS = "imports";
-  private static final String CODE_BLOCK_STARTS = "```java";
-  private static final String CODE_BLOCK_ENDS = "```";
-
-  private enum BlockType {CODE, IMPORTS, NONE}
-
-  @Test
-  void verifyExamplesOnReadmeDotMdCanBeCompiled() throws IOException {
-    final Logger logger = Logger.getAnonymousLogger();
-
-    final URL readmeDotMdLocation = ClassLoader.getSystemResource("README.md");
-    Assumptions.assumeTrue(readmeDotMdLocation != null, "README.md not found.");
-
-    logger.info("Parsing code blocks from README.md");
-    final Code code = readReadmeDotMdCodeBlocks(readmeDotMdLocation);
-
-    logger.info("Found " + code.getCodeBlocks().size() + " blocks, starting to compile.");
-    assertAllCodeBlocksCanBeCompiled(code);
-
-    logger.info("Successfully compiled all code blocks.");
+  private enum class BlockType {
+    CODE, IMPORTS, NONE
   }
 
-  private Code readReadmeDotMdCodeBlocks(final URL readmeDotMdLocation) throws IOException {
-    final StringBuilder sb = new StringBuilder();
-    BlockType blockType = BlockType.NONE;
-    String codeHeader = null;
-    int codeBlockNumber = 0;
-    String checkedExceptions = null;
+  @Ignore
+  @Test
+  @Throws(IOException::class)
+  fun verifyExamplesOnReadmeDotMdCanBeCompiled() {
+    val logger = Logger.getAnonymousLogger()
 
-    final List<String> lines = new BufferedReader(new InputStreamReader(readmeDotMdLocation.openStream()))
-        .lines().collect(Collectors.toList());
-    final Map<String, String> codeBlocks = new LinkedHashMap<>();
-    final List<String> importStatements = new ArrayList<>();
-    for (final String line : lines) {
+    val readmeDotMdLocation = ClassLoader.getSystemResource("README.md")
+    Assumptions.assumeTrue(readmeDotMdLocation != null, "README.md not found.")
+
+    logger.info("Parsing code blocks from README.md")
+    val code = readReadmeDotMdCodeBlocks(readmeDotMdLocation!!)
+
+    logger.info("Found " + code.codeBlocks.size + " blocks, starting to compile.")
+    assertAllCodeBlocksCanBeCompiled(code)
+
+    logger.info("Successfully compiled all code blocks.")
+  }
+
+  @Throws(IOException::class)
+  private fun readReadmeDotMdCodeBlocks(readmeDotMdLocation: URL): Code {
+    val sb = StringBuilder()
+    var blockType = BlockType.NONE
+    var codeHeader: String? = null
+    var codeBlockNumber = 0
+    var checkedExceptions: String? = null
+
+    val lines = BufferedReader(InputStreamReader(readmeDotMdLocation.openStream()))
+        .lines()
+    val codeBlocks = LinkedHashMap<String, String>()
+    val importStatements = ArrayList<String>()
+    for (line in lines) {
       if (line.startsWith(COMMENT_LINE_START)) {
-        codeHeader = line.replace(COMMENT_LINE_START, "").replace(COMMENT_LINE_END, "");
-      } else if (line.equals(CODE_BLOCK_STARTS)) {
-        if (CODE_IMPORTS.equals(codeHeader)) {
-          blockType = BlockType.IMPORTS;
+        codeHeader = line.replace(COMMENT_LINE_START, "").replace(COMMENT_LINE_END, "")
+      } else if (line == CODE_BLOCK_STARTS) {
+        if (CODE_IMPORTS == codeHeader) {
+          blockType = BlockType.IMPORTS
         } else {
-          blockType = BlockType.CODE;
+          blockType = BlockType.CODE
         }
         if (codeHeader != null && codeHeader.startsWith(CODE_REQUIRES)) {
-          final String requiredBlock = codeHeader.replace(CODE_REQUIRES, "");
-          sb.append(codeBlocks.get(requiredBlock));
-          codeHeader = null;
+          val requiredBlock = codeHeader.replace(CODE_REQUIRES, "")
+          sb.append(codeBlocks[requiredBlock])
+          codeHeader = null
         }
         if (codeHeader != null && codeHeader.startsWith(CODE_THROWS)) {
-          sb.append("try {");
-          checkedExceptions = codeHeader.replace(CODE_THROWS, "");
-          codeHeader = null;
+          sb.append("try {")
+          checkedExceptions = codeHeader.replace(CODE_THROWS, "")
+          codeHeader = null
         }
         if (codeHeader == null) {
-          codeHeader = String.valueOf(codeBlockNumber);
-          codeBlockNumber++;
+          codeHeader = codeBlockNumber.toString()
+          codeBlockNumber++
         }
-      } else if (line.equals(CODE_BLOCK_ENDS) && codeHeader != null) {
+      } else if (line == CODE_BLOCK_ENDS && codeHeader != null) {
         if (checkedExceptions != null) {
-          sb.append("} catch(").append(checkedExceptions).append(" e) {/* Ignoring on purpose */}");
+          sb.append("} catch(").append(checkedExceptions).append(" e) {/* Ignoring on purpose */}")
         }
-        codeBlocks.put(codeHeader, sb.toString());
-        blockType = BlockType.NONE;
-        codeHeader = null;
-        checkedExceptions = null;
-        sb.setLength(0);
+        codeBlocks[codeHeader] = sb.toString()
+        blockType = BlockType.NONE
+        codeHeader = null
+        checkedExceptions = null
+        sb.setLength(0)
       } else if (blockType == BlockType.CODE) {
-        sb.append(line).append("\n");
+        sb.append(line).append("\n")
       } else if (blockType == BlockType.IMPORTS) {
-        importStatements.add(line);
+        importStatements.add(line)
       }
     }
-    return new Code(importStatements, codeBlocks);
+    return Code(importStatements, codeBlocks)
   }
 
-  private void assertAllCodeBlocksCanBeCompiled(final Code code) throws IOException {
-    for (final Entry<String, String> entry : code.getCodeBlocks().entrySet()) {
-      final String header = entry.getKey();
-      final String block = entry.getValue();
+  @Throws(IOException::class)
+  private fun assertAllCodeBlocksCanBeCompiled(code: Code) {
+    for ((header, block) in code.codeBlocks) {
 
-      final File javaFile = File.createTempFile("ReadmeDotMdCodeBlock", ".java");
-      final FileWriter writer = new FileWriter(javaFile);
-      for (final String importStatement : code.getImportStatements()) {
-        writer.write(importStatement);
+      val javaFile = File.createTempFile("ReadmeDotMdCodeBlock", ".java")
+      val writer = FileWriter(javaFile)
+      for (importStatement in code.importStatements) {
+        writer.write(importStatement)
       }
-      writer.write("");
-      writer.write("public class " + javaFile.getName().replace(".java", "") + " {\n");
-      writer.write("  public static void main(String[] args) {\n");
-      writer.write(block);
-      writer.write("  }\n");
-      writer.write("}\n");
-      writer.flush();
-      writer.close();
+      writer.write("")
+      writer.write("public class " + javaFile.name.replace(".java", "") + " {\n")
+      writer.write("  public static void main(String[] args) {\n")
+      writer.write(block)
+      writer.write("  }\n")
+      writer.write("}\n")
+      writer.flush()
+      writer.close()
 
-      final JavaCompiler javaCompiler = ToolProvider.getSystemJavaCompiler();
-      int result = javaCompiler.run(null, null, null, javaFile.getAbsolutePath());
-      assertEquals(0, result, "Code block '" + header + "' fails to compile: \n" + block);
+      val javaCompiler = ToolProvider.getSystemJavaCompiler()
+      val result = javaCompiler.run(null, null, null, javaFile.absolutePath)
+      assertEquals(0, result, "Code block '$header' fails to compile: \n$block")
     }
   }
 
 
-  private static class Code {
-    private final List<String> importStatements;
-    private final Map<String, String> codeBlocks;
+  private class Code(val importStatements: List<String>, val codeBlocks: Map<String, String>)
 
-    public Code(final List<String> importStatements, final Map<String, String> codeBlocks) {
-      this.importStatements = importStatements;
-      this.codeBlocks = codeBlocks;
-    }
-
-    public List<String> getImportStatements() {
-      return importStatements;
-    }
-
-    public Map<String, String> getCodeBlocks() {
-      return codeBlocks;
-    }
+  companion object {
+    private val COMMENT_LINE_START = "[//]: # ("
+    private val COMMENT_LINE_END = ")"
+    private val CODE_REQUIRES = "requires-"
+    private val CODE_THROWS = "throws-"
+    private val CODE_IMPORTS = "imports"
+    private val CODE_BLOCK_STARTS = "```java"
+    private val CODE_BLOCK_ENDS = "```"
   }
 }

@@ -1,78 +1,75 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.zeroone3010.yahueapi.domain.Group;
-import io.github.zeroone3010.yahueapi.domain.GroupState;
-import io.github.zeroone3010.yahueapi.domain.Root;
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.zeroone3010.yahueapi.domain.Group
+import io.github.zeroone3010.yahueapi.domain.GroupState
+import io.github.zeroone3010.yahueapi.domain.Root
+import java.io.IOException
+import java.net.MalformedURLException
+import java.net.URL
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Supplier;
+internal class RoomFactory(private val hue: Hue, private val objectMapper: ObjectMapper, private val bridgeUri: String) {
+  private val lightFactory: LightFactory
 
-import static java.util.stream.Collectors.toSet;
-
-final class RoomFactory {
-  private static final String ACTION_PATH = "/action";
-
-  private final Hue hue;
-  private final ObjectMapper objectMapper;
-  private final String bridgeUri;
-  private final LightFactory lightFactory;
-
-  RoomFactory(final Hue hue, final ObjectMapper objectMapper, final String bridgeUri) {
-    this.hue = hue;
-    this.objectMapper = objectMapper;
-    this.bridgeUri = bridgeUri;
-    this.lightFactory = new LightFactory(hue, objectMapper);
+  init {
+    this.lightFactory = LightFactory(hue, objectMapper)
   }
 
-  Room buildRoom(final String groupId, final Group group, final Root root) {
-    final Set<Light> lights = group.getLights().stream()
-        .map(lightId -> buildLight(lightId, root))
-        .collect(toSet());
+  fun buildRoom(groupId: String, group: Group, root: Root): Room {
+
+    val lights = group.lights!!
+        .map { lightId -> buildLight(lightId, root) }.toSet()
     try {
-      final URL url = new URL(bridgeUri + "groups/" + groupId);
-      return new RoomImpl(
+      val url = URL(bridgeUri + "groups/" + groupId)
+      return RoomImpl(
           group,
           lights,
           createStateProvider(url, groupId),
-          stateSetter(url));
-    } catch (final MalformedURLException e) {
-      throw new HueApiException(e);
+          stateSetter(url))
+    } catch (e: MalformedURLException) {
+      throw HueApiException(e)
+    }
+
+  }
+
+  private fun buildLight(lightId: String, root: Root): Light {
+    return lightFactory.buildLight(lightId, root, bridgeUri)
+  }
+
+  private fun createStateProvider(url: URL,
+                                  id: String): () -> GroupState? {
+    return { createStateProvider2(url, id) }
+  }
+
+  private fun createStateProvider2(url: URL,
+                                   id: String): GroupState? {
+    if (hue.isCaching) {
+      return hue.raw!!.groups!![id]?.state
+    }
+    try {
+      return objectMapper.readValue(url, Group::class.java).state
+    } catch (e: IOException) {
+      throw HueApiException(e)
     }
   }
 
-  private Light buildLight(final String lightId, final Root root) {
-    return lightFactory.buildLight(lightId, root, bridgeUri);
+  private fun stateSetter(url: URL): (State) -> String {
+    return { state -> stateSetter2(url, state) }
   }
 
-  private Supplier<GroupState> createStateProvider(final URL url,
-                                                   final String id) {
-    return () -> {
-      if (hue.isCaching()) {
-        return hue.getRaw().getGroups().get(id).getState();
-      }
-      try {
-        return objectMapper.readValue(url, Group.class).getState();
-      } catch (final IOException e) {
-        throw new HueApiException(e);
-      }
-    };
+  private fun stateSetter2(url: URL, state: State): String {
+    val body: String
+    try {
+      body = objectMapper.writeValueAsString(state)
+    } catch (e: JsonProcessingException) {
+      throw HueApiException(e)
+    }
+
+    return HttpUtil.put(url, ACTION_PATH, body)
   }
 
-  private Function<State, String> stateSetter(final URL url) {
-    return state -> {
-      final String body;
-      try {
-        body = objectMapper.writeValueAsString(state);
-      } catch (final JsonProcessingException e) {
-        throw new HueApiException(e);
-      }
-      return HttpUtil.put(url, ACTION_PATH, body);
-    };
+  companion object {
+    private const val ACTION_PATH = "/action"
   }
 }

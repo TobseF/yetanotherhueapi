@@ -1,28 +1,18 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import io.github.zeroone3010.yahueapi.domain.SensorDto;
+import io.github.zeroone3010.yahueapi.domain.SensorDto
+import java.net.URL
 
-import java.net.URL;
-import java.util.Map;
-import java.util.function.Supplier;
+internal class DimmerSwitchImpl(id: String, sensor: SensorDto, url: URL, stateProvider: () -> Map<String, Any>?) : BasicSensor(id, sensor, url, stateProvider), DimmerSwitch {
 
-final class DimmerSwitchImpl extends BasicSensor implements DimmerSwitch {
+  override val latestButtonEvent: DimmerSwitchButtonEvent
+    get() = DimmerSwitchButtonEvent(readStateValue("buttonevent", Int::class.java))
 
-  DimmerSwitchImpl(final String id, final SensorDto sensor, final URL url, final Supplier<Map<String, Object>> stateProvider) {
-    super(id, sensor, url, stateProvider);
-  }
-
-  @Override
-  public String toString() {
+  override fun toString(): String {
     return "DimmerSwitch{" +
-        "id='" + super.id + '\'' +
-        ", name='" + super.name + '\'' +
+        "id='" + super.id + '\''.toString() +
+        ", name='" + super.name + '\''.toString() +
         ", type=" + super.type +
-        '}';
-  }
-
-  @Override
-  public DimmerSwitchButtonEvent getLatestButtonEvent() {
-    return new DimmerSwitchButtonEvent(readStateValue("buttonevent", Integer.class));
+        '}'.toString()
   }
 }

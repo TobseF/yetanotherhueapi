@@ -1,29 +1,16 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty
 
-public class RuleCondition {
+class RuleCondition {
   @JsonProperty("address")
-  private String address;
+  val address: String? = null
   @JsonProperty("operator")
-  private String operator;
+  val operator: String? = null
   @JsonProperty("value")
-  private String value;
+  val value: String? = null
 
-  public String getAddress() {
-    return address;
-  }
-
-  public String getOperator() {
-    return operator;
-  }
-
-  public String getValue() {
-    return value;
-  }
-
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

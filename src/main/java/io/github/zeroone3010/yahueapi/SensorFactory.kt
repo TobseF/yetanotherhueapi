@@ -1,65 +1,54 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.zeroone3010.yahueapi.domain.SensorDto;
+import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.zeroone3010.yahueapi.domain.SensorDto
+import java.io.IOException
+import java.net.MalformedURLException
+import java.net.URL
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Map;
-import java.util.function.Supplier;
+internal class SensorFactory(private val hue: Hue, private val objectMapper: ObjectMapper) {
 
-final class SensorFactory {
-  private final Hue hue;
-  private final ObjectMapper objectMapper;
-
-  SensorFactory(final Hue hue, final ObjectMapper objectMapper) {
-    this.hue = hue;
-    this.objectMapper = objectMapper;
-  }
-
-  Sensor buildSensor(final String id, final SensorDto sensor, final String bridgeUri) {
+  fun buildSensor(id: String, sensor: SensorDto?, bridgeUri: String): Sensor {
     if (sensor == null) {
-      throw new HueApiException("Sensor " + id + " cannot be found.");
+      throw HueApiException("Sensor $id cannot be found.")
     }
 
-    final URL url = buildSensorUrl(bridgeUri, id);
+    val url = buildSensorUrl(bridgeUri, id)
 
-    final SensorType type = SensorType.parseTypeString(sensor.getType());
-    final Supplier<Map<String, Object>> stateProvider = createStateProvider(url, id);
-    switch (type) {
-      case MOTION:
-        return new MotionSensorImpl(id, sensor, url, stateProvider);
-      case TEMPERATURE:
-        return new TemperatureSensorImpl(id, sensor, url, stateProvider);
-      case DAYLIGHT:
-        return new DaylightSensorImpl(id, sensor, url, stateProvider);
-      case DIMMER_SWITCH:
-        return new DimmerSwitchImpl(id, sensor, url, stateProvider);
-      default:
-        return new BasicSensor(id, sensor, url, stateProvider);
+    val type = SensorType.parseTypeString(sensor.type)
+    val stateProvider = createStateProvider(url, id)
+    when (type) {
+      SensorType.MOTION -> return MotionSensorImpl(id, sensor, url, stateProvider)
+      SensorType.TEMPERATURE -> return TemperatureSensorImpl(id, sensor, url, stateProvider)
+      SensorType.DAYLIGHT -> return DaylightSensorImpl(id, sensor, url, stateProvider)
+      SensorType.DIMMER_SWITCH -> return DimmerSwitchImpl(id, sensor, url, stateProvider)
+      else -> return BasicSensor(id, sensor, url, stateProvider)
     }
   }
 
-  private Supplier<Map<String, Object>> createStateProvider(final URL url, final String id) {
-    return () -> {
-      if (hue.isCaching()) {
-        return hue.getRaw().getSensors().get(id).getState();
-      }
-      try {
-        return objectMapper.readValue(url, SensorDto.class).getState();
-      } catch (IOException e) {
-        throw new HueApiException(e);
-      }
-    };
+  private fun createStateProvider(url: URL, id: String): () -> Map<String, Any>? {
+    return { createStateProvider2(url, id) }
   }
 
-  private static URL buildSensorUrl(final String bridgeUri, final String sensorId) {
+  private fun createStateProvider2(url: URL, id: String): Map<String, Any>? {
+    if (hue.isCaching) {
+      return hue.raw!!.sensors!![id]?.state
+    }
     try {
-      return new URL(bridgeUri + "sensors/" + sensorId);
-    } catch (final MalformedURLException e) {
-      throw new HueApiException(e);
+      return objectMapper.readValue(url, SensorDto::class.java).state
+    } catch (e: IOException) {
+      throw HueApiException(e)
     }
   }
+
+}
+
+private fun buildSensorUrl(bridgeUri: String, sensorId: String): URL {
+  try {
+    return URL(bridgeUri + "sensors/" + sensorId)
+  } catch (e: MalformedURLException) {
+    throw HueApiException(e)
+  }
+
 
 }

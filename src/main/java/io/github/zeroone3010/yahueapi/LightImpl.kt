@@ -1,95 +1,63 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import io.github.zeroone3010.yahueapi.domain.LightDto;
-import io.github.zeroone3010.yahueapi.domain.LightState;
+import io.github.zeroone3010.yahueapi.domain.LightDto
+import io.github.zeroone3010.yahueapi.domain.LightState
+import java.util.logging.Logger
 
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.logging.Logger;
+internal class LightImpl(protected val id: String, light: LightDto?, private val stateProvider: () -> LightState?,
+                         private val stateSetter: (State) -> String) : Light {
+  override val name: String
+  override val type: LightType
 
-final class LightImpl implements Light {
-  private static final Logger logger = Logger.getLogger("LightImpl");
+  override val isOn: Boolean
+    get() = lightState.isOn
 
-  private final String id;
-  private final String name;
-  private final Supplier<LightState> stateProvider;
-  private final Function<State, String> stateSetter;
-  private final LightType type;
+  override val isReachable: Boolean
+    get() = lightState.isReachable
 
-  LightImpl(final String id, final LightDto light, final Supplier<LightState> stateProvider,
-            final Function<State, String> stateSetter) {
-    this.id = id;
-    if (light == null) {
-      throw new HueApiException("Light " + id + " cannot be found.");
+  private val lightState: LightState
+    get() {
+      val state = stateProvider.invoke()!!
+      logger.fine(state.toString())
+      return state
     }
-    this.name = light.getName();
-    this.stateProvider = stateProvider;
-    this.stateSetter = stateSetter;
-    this.type = LightType.parseTypeString(light.getType());
+
+  override var state: State
+    get() = State.build(lightState)
+    set(state) {
+      val result = stateSetter.invoke(state)
+      logger.fine(result)
+    }
+
+  init {
+    if (light == null) {
+      throw HueApiException("Light $id cannot be found.")
+    }
+    this.name = light.name ?: ""
+    this.type = LightType.parseTypeString(light.type)
   }
 
-  protected String getId() {
-    return id;
+  override fun turnOn() {
+    state = (State.builder() as StateBuilderSteps.OnOffStep).on()
   }
 
-  @Override
-  public String getName() {
-    return name;
+  override fun turnOff() {
+    state = (State.builder() as StateBuilderSteps.OnOffStep).off()
   }
 
-  @Override
-  public void turnOn() {
-    setState(((StateBuilderSteps.OnOffStep) State.builder()).on());
+  override fun setBrightness(brightness: Int) {
+    state = (State.builder() as StateBuilderSteps.BrightnessStep).brightness(brightness).keepCurrentState()
   }
 
-  @Override
-  public void turnOff() {
-    setState(((StateBuilderSteps.OnOffStep) State.builder()).off());
-  }
-
-  @Override
-  public boolean isOn() {
-    return getLightState().isOn();
-  }
-
-  @Override
-  public boolean isReachable() {
-    return getLightState().isReachable();
-  }
-
-  private LightState getLightState() {
-    final LightState state = stateProvider.get();
-    logger.fine(state.toString());
-    return state;
-  }
-
-  @Override
-  public void setBrightness(final int brightness) {
-    setState(((StateBuilderSteps.BrightnessStep) State.builder()).brightness(brightness).keepCurrentState());
-  }
-
-  @Override
-  public void setState(final State state) {
-    final String result = stateSetter.apply(state);
-    logger.fine(result);
-  }
-
-  @Override
-  public LightType getType() {
-    return type;
-  }
-
-  @Override
-  public State getState() {
-    return State.build(getLightState());
-  }
-
-  @Override
-  public String toString() {
+  override fun toString(): String {
     return "Light{" +
-        "id='" + id + '\'' +
-        ", name='" + name + '\'' +
+        "id='" + id + '\''.toString() +
+        ", name='" + name + '\''.toString() +
         ", type=" + type +
-        '}';
+        '}'.toString()
+  }
+
+  companion object {
+    private val logger = Logger.getLogger("LightImpl")
   }
 }

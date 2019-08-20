@@ -1,258 +1,216 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.zeroone3010.yahueapi.StateBuilderSteps.BrightnessStep;
-import io.github.zeroone3010.yahueapi.StateBuilderSteps.BuildStep;
-import io.github.zeroone3010.yahueapi.StateBuilderSteps.ColorStep;
-import io.github.zeroone3010.yahueapi.StateBuilderSteps.ColorTemperatureStep;
-import io.github.zeroone3010.yahueapi.StateBuilderSteps.HueStep;
-import io.github.zeroone3010.yahueapi.StateBuilderSteps.InitialStep;
-import io.github.zeroone3010.yahueapi.StateBuilderSteps.OnOffStep;
-import io.github.zeroone3010.yahueapi.StateBuilderSteps.SaturationStep;
-import io.github.zeroone3010.yahueapi.StateBuilderSteps.TransitionTimeStep;
-import io.github.zeroone3010.yahueapi.StateBuilderSteps.XyStep;
-import io.github.zeroone3010.yahueapi.domain.LightState;
-
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.logging.Logger;
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.ObjectMapper
+import common.util.Color
+import io.github.zeroone3010.yahueapi.StateBuilderSteps.BrightnessStep
+import io.github.zeroone3010.yahueapi.StateBuilderSteps.BuildStep
+import io.github.zeroone3010.yahueapi.StateBuilderSteps.ColorStep
+import io.github.zeroone3010.yahueapi.StateBuilderSteps.ColorTemperatureStep
+import io.github.zeroone3010.yahueapi.StateBuilderSteps.HueStep
+import io.github.zeroone3010.yahueapi.StateBuilderSteps.InitialStep
+import io.github.zeroone3010.yahueapi.StateBuilderSteps.OnOffStep
+import io.github.zeroone3010.yahueapi.StateBuilderSteps.SaturationStep
+import io.github.zeroone3010.yahueapi.StateBuilderSteps.TransitionTimeStep
+import io.github.zeroone3010.yahueapi.StateBuilderSteps.XyStep
+import io.github.zeroone3010.yahueapi.domain.LightState
+import java.util.*
+import java.util.logging.Logger
+import kotlin.math.pow
 
 @JsonInclude(Include.NON_NULL)
-public final class State {
-  private static final Logger logger = Logger.getLogger("State");
+class State private constructor(builder: Builder) {
 
-  private static final int DIMMABLE_LIGHT_COLOR_TEMPERATURE = 370;
+  val on: Boolean?
+  val hue: Int?
+  val sat: Int?
+  val bri: Int?
+  val ct: Int?
+  val transitiontime: Int?
+  val xy: List<Float>?
 
-  private final Boolean on;
-  private final Integer hue;
-  private final Integer sat;
-  private final Integer bri;
-  private final Integer ct;
-  private final Integer transitiontime;
-  private final List<Float> xy;
-
-  private State(final Builder builder) {
-    this.on = builder.on;
-    this.bri = builder.bri;
-    this.xy = builder.xy;
-    this.hue = builder.hue;
-    this.sat = builder.sat;
-    this.ct = builder.ct;
-    this.transitiontime = builder.transitionTime;
-  }
-
-  public Boolean getOn() {
-    return on;
-  }
-
-  public Integer getBri() {
-    return bri;
-  }
-
-  public List<Float> getXy() {
-    return xy;
-  }
-
-  public Integer getHue() {
-    return hue;
-  }
-
-  public Integer getSat() {
-    return sat;
-  }
-
-  public Integer getCt() {
-    return ct;
-  }
-
-  public Integer getTransitiontime() {
-    return transitiontime;
-  }
-
-  public static InitialStep builder() {
-    return new Builder();
-  }
-
-  static State build(final LightState state) {
-    logger.fine(state.toString());
-    if (state.getColorMode() == null) {
-      return State.builder().colorTemperatureInMireks(DIMMABLE_LIGHT_COLOR_TEMPERATURE).brightness(state.getBrightness()).on(state.isOn());
-    }
-    switch (state.getColorMode()) {
-      case "xy":
-        return State.builder().xy(state.getXy()).brightness(state.getBrightness()).on(state.isOn());
-      case "ct":
-        return State.builder().colorTemperatureInMireks(state.getCt()).brightness(state.getBrightness()).on(state.isOn());
-      case "hs":
-        return State.builder().hue(state.getHue()).saturation(state.getSaturation()).brightness(state.getBrightness()).on(state.isOn());
-    }
-    throw new HueApiException("Unknown color mode '" + state.getColorMode() + "'.");
-  }
-
-  @Override
-  public boolean equals(final Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    final State state = (State) o;
-    return Objects.equals(on, state.on) &&
-        Objects.equals(hue, state.hue) &&
-        Objects.equals(sat, state.sat) &&
-        Objects.equals(bri, state.bri) &&
-        Objects.equals(ct, state.ct) &&
-        Objects.equals(xy, state.xy);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(on, hue, sat, bri, ct, xy);
+  init {
+    this.on = builder.on
+    this.bri = builder.bri
+    this.xy = builder.xy
+    this.hue = builder.hue
+    this.sat = builder.sat
+    this.ct = builder.ct
+    this.transitiontime = builder.transitionTime
   }
 
 
-  public static final class Builder implements InitialStep, HueStep, SaturationStep, BrightnessStep, XyStep, ColorStep, ColorTemperatureStep, TransitionTimeStep, BuildStep, OnOffStep {
-    private Boolean on;
-    private Integer hue;
-    private Integer sat;
-    private Integer bri;
-    private Integer ct;
-    private Integer transitionTime;
-    private List<Float> xy;
+  class Builder : InitialStep, HueStep, SaturationStep, BrightnessStep, XyStep, ColorStep, ColorTemperatureStep, TransitionTimeStep, BuildStep, OnOffStep {
+    var on: Boolean? = null
+    var hue: Int? = null
+    var sat: Int? = null
+    var bri: Int? = null
+    var ct: Int? = null
+    var transitionTime: Int? = null
+    var xy: List<Float>? = null
 
-    @Override
-    public SaturationStep hue(int hue) {
-      this.hue = hue;
-      return this;
+    override fun hue(hue: Int): SaturationStep {
+      this.hue = hue
+      return this
     }
 
-    @Override
-    public BrightnessStep saturation(int saturation) {
-      this.sat = saturation;
-      return this;
+    override fun saturation(saturation: Int): BrightnessStep {
+      this.sat = saturation
+      return this
     }
 
-    @Override
-    public BuildStep brightness(int brightness) {
-      this.bri = brightness;
-      return this;
+    override fun brightness(brightness: Int): BuildStep {
+      this.bri = brightness
+      return this
     }
 
-    @Override
-    public BrightnessStep xy(List<Float> xy) {
-      if (xy == null || xy.size() != 2 || !isInRange(xy.get(0), 0, 1) || !isInRange(xy.get(1), 0, 1)) {
-        throw new IllegalArgumentException("The xy list must contain exactly 2 values, between 0 and 1.");
+    override fun xy(xy: List<Float>?): BrightnessStep {
+      if (xy == null || xy.size != 2 || !isInRange(xy[0], 0f, 1f) || !isInRange(xy[1], 0f, 1f)) {
+        throw IllegalArgumentException("The xy list must contain exactly 2 values, between 0 and 1.")
       }
-      final List<Float> xyValues = new ArrayList<>();
-      xyValues.addAll(xy);
-      this.xy = Collections.unmodifiableList(xyValues);
-      return this;
+      val xyValues = ArrayList<Float>()
+      xyValues.addAll(xy)
+      this.xy = Collections.unmodifiableList(xyValues)
+      return this
     }
 
-    private boolean isInRange(final Float value, final float min, final float max) {
-      return value != null && !(value < min) && !(value > max);
+    private fun isInRange(value: Float?, min: Float, max: Float): Boolean {
+      return value != null && value >= min && value <= max
     }
 
-    @Override
-    public BuildStep color(Color color) {
+    override fun color(color: Color?): BuildStep {
       if (color == null) {
-        throw new IllegalArgumentException("Color must not be null");
+        throw IllegalArgumentException("Color must not be null")
       }
-      final XAndYAndBrightness xAndYAndBrightness = rgbToXy(color);
-      this.xy = xAndYAndBrightness.getXY();
-      this.bri = xAndYAndBrightness.getBrightness();
-      return this;
+      val xAndYAndBrightness = rgbToXy(color)
+      this.xy = xAndYAndBrightness.xy
+      this.bri = xAndYAndBrightness.brightness
+      return this
     }
 
-    @Override
-    public BuildStep color(String color) {
-      return color(hexToColor(color));
+    override fun color(color: String): BuildStep {
+      return color(hexToColor(color))
     }
 
-    @Override
-    public BrightnessStep colorTemperatureInMireks(int colorTemperature) {
-      this.ct = colorTemperature;
-      return this;
+    override fun colorTemperatureInMireks(colorTemperature: Int): BrightnessStep {
+      this.ct = colorTemperature
+      return this
     }
 
-    @Override
-    public OnOffStep transitionTime(int tenths) {
-      this.transitionTime = tenths;
-      return this;
+    override fun transitionTime(tenths: Int): OnOffStep {
+      this.transitionTime = tenths
+      return this
     }
 
-    @Override
-    public State on(Boolean on) {
-      this.on = on;
-      return build();
+    override fun on(on: Boolean?): State {
+      this.on = on
+      return build()
     }
 
-    private State build() {
-      return new State(this);
+    private fun build(): State {
+      return State(this)
     }
 
-    private static Color hexToColor(final String hexColor) {
-      return Optional.ofNullable(hexColor)
-          .map(hex -> Integer.parseInt(hex, 16))
-          .map(Color::new)
-          .orElse(null);
+
+    private fun hexToColor(hexColor: String): Color {
+      return Color.valueOf(hexColor)
     }
 
-    private static XAndYAndBrightness rgbToXy(final Color color) {
-      final float red = color.getRed() / 255f;
-      final float green = color.getGreen() / 255f;
-      final float blue = color.getBlue() / 255f;
-      final double r = gammaCorrection(red);
-      final double g = gammaCorrection(green);
-      final double b = gammaCorrection(blue);
-      final double rgbX = r * 0.664511f + g * 0.154324f + b * 0.162028f;
-      final double rgbY = r * 0.283881f + g * 0.668433f + b * 0.047685f;
-      final double rgbZ = r * 0.000088f + g * 0.072310f + b * 0.986039f;
-      final float x = (float) (rgbX / (rgbX + rgbY + rgbZ));
-      final float y = (float) (rgbY / (rgbX + rgbY + rgbZ));
-      return new XAndYAndBrightness(x, y, (int) (rgbY * 255f));
+    private fun rgbToXy(color: Color): XAndYAndBrightness {
+      val red = color.r / 255f
+      val green = color.g / 255f
+      val blue = color.b / 255f
+      val r = gammaCorrection(red)
+      val g = gammaCorrection(green)
+      val b = gammaCorrection(blue)
+      val rgbX = r * 0.664511f + g * 0.154324f + b * 0.162028f
+      val rgbY = r * 0.283881f + g * 0.668433f + b * 0.047685f
+      val rgbZ = r * 0.000088f + g * 0.072310f + b * 0.986039f
+      val x = (rgbX / (rgbX + rgbY + rgbZ))
+      val y = (rgbY / (rgbX + rgbY + rgbZ))
+      return XAndYAndBrightness(x, y, (rgbY * 255f).toInt())
     }
 
-    private static double gammaCorrection(float component) {
-      return (component > 0.04045f) ? Math.pow((component + 0.055f) / (1.0f + 0.055f), 2.4f) : (component / 12.92f);
+    private fun gammaCorrection(component: Float): Float {
+      return (if (component > 0.04045f) ((component + 0.055f) / (1.0f + 0.055f)).toDouble().pow(2.4).toFloat() else component / 12.92f)
     }
   }
 
 
-  private static final class XAndYAndBrightness {
-    final float x;
-    final float y;
-    final int brightness;
+  private class XAndYAndBrightness internal constructor(internal val x: Float, internal val y: Float, internal val brightness: Int) {
 
-    XAndYAndBrightness(final float x, final float y, final int brightness) {
-      this.x = x;
-      this.y = y;
-      this.brightness = brightness;
-    }
+    internal val xy: List<Float>
+      get() {
+        val xyColor = ArrayList<Float>()
+        xyColor.add(this.x)
+        xyColor.add(this.y)
+        return xyColor
+      }
 
-    List<Float> getXY() {
-      final List<Float> xyColor = new ArrayList<>();
-      xyColor.add(this.x);
-      xyColor.add(this.y);
-      return xyColor;
-    }
-
-    int getBrightness() {
-      return brightness;
-    }
-
-    @Override
-    public String toString() {
+    override fun toString(): String {
       try {
-        return new ObjectMapper().writeValueAsString(this);
-      } catch (final JsonProcessingException e) {
-        throw new RuntimeException(e);
+        return ObjectMapper().writeValueAsString(this)
+      } catch (e: JsonProcessingException) {
+        throw RuntimeException(e)
       }
+
     }
   }
+
+  companion object {
+    private val logger = Logger.getLogger("State")
+
+    private const val DIMMABLE_LIGHT_COLOR_TEMPERATURE = 370
+
+    fun builder(): InitialStep {
+      return Builder()
+    }
+
+    internal fun build(state: LightState): State {
+      logger.fine(state.toString())
+      if (state.colorMode == null) {
+        return State.builder().colorTemperatureInMireks(DIMMABLE_LIGHT_COLOR_TEMPERATURE).brightness(state.brightness).on(state.isOn)
+      }
+      when (state.colorMode) {
+        "xy" -> return State.builder().xy(state.xy).brightness(state.brightness).on(state.isOn)
+        "ct" -> return State.builder().colorTemperatureInMireks(state.ct).brightness(state.brightness).on(state.isOn)
+        "hs" -> return State.builder().hue(state.hue).saturation(state.saturation).brightness(state.brightness).on(state.isOn)
+      }
+      throw HueApiException("Unknown color mode '" + state.colorMode + "'.")
+    }
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as State
+
+    if (on != other.on) return false
+    if (hue != other.hue) return false
+    if (sat != other.sat) return false
+    if (bri != other.bri) return false
+    if (ct != other.ct) return false
+    if (xy != other.xy) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = on?.hashCode() ?: 0
+    result = 31 * result + (hue ?: 0)
+    result = 31 * result + (sat ?: 0)
+    result = 31 * result + (bri ?: 0)
+    result = 31 * result + (ct ?: 0)
+    result = 31 * result + (xy?.hashCode() ?: 0)
+    return result
+  }
+
+  override fun toString(): String {
+    return "State(on=$on, hue=$hue, sat=$sat, bri=$bri, ct=$ct, xy=$xy)"
+  }
+
 
 }

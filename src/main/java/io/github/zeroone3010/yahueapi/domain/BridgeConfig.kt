@@ -1,187 +1,68 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty
 
-import java.util.Map;
-
-public class BridgeConfig {
+class BridgeConfig {
   @JsonProperty("name")
-  private String name;
+  val name: String? = null
   @JsonProperty("zigbeechannel")
-  private int zigbeeChannel;
+  val zigbeeChannel: Int = 0
   @JsonProperty("bridgeid")
-  private String bridgeId;
+  val bridgeId: String? = null
   @JsonProperty("mac")
-  private String mac;
+  val mac: String? = null
   @JsonProperty("dhcp")
-  private boolean dhcp;
+  val isDhcp: Boolean = false
   @JsonProperty("ipaddress")
-  private String ipAddress;
+  val ipAddress: String? = null
   @JsonProperty("netmask")
-  private String netmask;
+  val netmask: String? = null
   @JsonProperty("gateway")
-  private String gateway;
+  val gateway: String? = null
   @JsonProperty("proxyaddress")
-  private String proxyAddress;
+  val proxyAddress: String? = null
   @JsonProperty("proxyport")
-  private int proxyPort;
+  val proxyPort: Int = 0
   @JsonProperty("UTC")
-  private String utc;
+  val utc: String? = null
   @JsonProperty("localtime")
-  private String localTime;
+  val localTime: String? = null
   @JsonProperty("timezone")
-  private String timeZone;
+  val timeZone: String? = null
   @JsonProperty("modelid")
-  private String modelId;
+  val modelId: String? = null
   @JsonProperty("datastoreversion")
-  private String dataStoreVersion;
+  val dataStoreVersion: String? = null
   @JsonProperty("swversion")
-  private String softwareVersion;
+  val softwareVersion: String? = null
   @JsonProperty("apiversion")
-  private String apiVersion;
+  val apiVersion: String? = null
   @JsonProperty("swupdate")
-  private ConfigSoftwareUpdate softwareUpdate;
+  val softwareUpdate: ConfigSoftwareUpdate? = null
   @JsonProperty("swupdate2")
-  private ConfigSoftwareUpdate2 softwareUpdate2;
+  val softwareUpdate2: ConfigSoftwareUpdate2? = null
   @JsonProperty("linkbutton")
-  private boolean linkButton;
+  val isLinkButton: Boolean = false
   @JsonProperty("portalservices")
-  private boolean portalServices;
+  val isPortalServices: Boolean = false
   @JsonProperty("portalconnection")
-  private String portalConnection;
+  val portalConnection: String? = null
   @JsonProperty("portalstate")
-  private PortalState portalState;
+  val portalState: PortalState? = null
   @JsonProperty("internetservices")
-  private InternetServices internetServices;
+  val internetServices: InternetServices? = null
   @JsonProperty("factorynew")
-  private boolean factoryNew;
+  val isFactoryNew: Boolean = false
   @JsonProperty("replacesbridgeid")
-  private String replacesBridgeId;
+  val replacesBridgeId: String? = null
   @JsonProperty("backup")
-  private ConfigBackup backup;
+  val backup: ConfigBackup? = null
   @JsonProperty("starterkitid")
-  private String starterKitId;
+  val starterKitId: String? = null
   @JsonProperty("whitelist")
-  private Map<String, WhiteListItem> whiteList;
+  val whiteList: Map<String, WhiteListItem>? = null
 
-  public String getName() {
-    return name;
-  }
-
-  public int getZigbeeChannel() {
-    return zigbeeChannel;
-  }
-
-  public String getBridgeId() {
-    return bridgeId;
-  }
-
-  public String getMac() {
-    return mac;
-  }
-
-  public boolean isDhcp() {
-    return dhcp;
-  }
-
-  public String getIpAddress() {
-    return ipAddress;
-  }
-
-  public String getNetmask() {
-    return netmask;
-  }
-
-  public String getGateway() {
-    return gateway;
-  }
-
-  public String getProxyAddress() {
-    return proxyAddress;
-  }
-
-  public int getProxyPort() {
-    return proxyPort;
-  }
-
-  public String getUtc() {
-    return utc;
-  }
-
-  public String getLocalTime() {
-    return localTime;
-  }
-
-  public String getTimeZone() {
-    return timeZone;
-  }
-
-  public String getModelId() {
-    return modelId;
-  }
-
-  public String getDataStoreVersion() {
-    return dataStoreVersion;
-  }
-
-  public String getSoftwareVersion() {
-    return softwareVersion;
-  }
-
-  public String getApiVersion() {
-    return apiVersion;
-  }
-
-  public ConfigSoftwareUpdate getSoftwareUpdate() {
-    return softwareUpdate;
-  }
-
-  public ConfigSoftwareUpdate2 getSoftwareUpdate2() {
-    return softwareUpdate2;
-  }
-
-  public boolean isLinkButton() {
-    return linkButton;
-  }
-
-  public boolean isPortalServices() {
-    return portalServices;
-  }
-
-  public String getPortalConnection() {
-    return portalConnection;
-  }
-
-  public PortalState getPortalState() {
-    return portalState;
-  }
-
-  public InternetServices getInternetServices() {
-    return internetServices;
-  }
-
-  public boolean isFactoryNew() {
-    return factoryNew;
-  }
-
-  public String getReplacesBridgeId() {
-    return replacesBridgeId;
-  }
-
-  public ConfigBackup getBackup() {
-    return backup;
-  }
-
-  public String getStarterKitId() {
-    return starterKitId;
-  }
-
-  public Map<String, WhiteListItem> getWhiteList() {
-    return whiteList;
-  }
-
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

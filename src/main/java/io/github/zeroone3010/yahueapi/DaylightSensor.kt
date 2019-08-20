@@ -1,10 +1,10 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-public interface DaylightSensor extends Sensor {
+interface DaylightSensor : Sensor {
   /**
    * Tells whether the current time is after sunrise but before sunset.
    *
-   * @return {@code true} if it's daylight time, {@code false} if not.
+   * @return `true` if it's daylight time, `false` if not.
    */
-  boolean isDaylightTime();
+  val isDaylightTime: Boolean
 }

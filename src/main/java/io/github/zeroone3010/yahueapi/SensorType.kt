@@ -1,9 +1,9 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
 /**
  * See https://developers.meethue.com/documentation/supported-sensors for further specifications.
  */
-public enum SensorType {
+enum class SensorType {
   /**
    * A temperature sensor. Either ZLLTemperature or CLIPTemperature.
    */
@@ -30,25 +30,22 @@ public enum SensorType {
   UNKNOWN;
 
 
-  public static SensorType parseTypeString(final String type) {
-    if (type == null) {
-      return UNKNOWN;
-    }
-    switch (type.toLowerCase()) {
-      case "zlltemperature":
-        return TEMPERATURE;
-      case "cliptemperature":
-        return TEMPERATURE;
-      case "zllpresence":
-        return MOTION;
-      case "clippresence":
-        return MOTION;
-      case "zllswitch":
-        return DIMMER_SWITCH;
-      case "daylight":
-        return DAYLIGHT;
-      default:
-        return UNKNOWN;
+  companion object {
+
+
+    fun parseTypeString(type: String?): SensorType {
+      if (type == null) {
+        return UNKNOWN
+      }
+      when (type.toLowerCase()) {
+        "zlltemperature" -> return TEMPERATURE
+        "cliptemperature" -> return TEMPERATURE
+        "zllpresence" -> return MOTION
+        "clippresence" -> return MOTION
+        "zllswitch" -> return DIMMER_SWITCH
+        "daylight" -> return DAYLIGHT
+        else -> return UNKNOWN
+      }
     }
   }
 }

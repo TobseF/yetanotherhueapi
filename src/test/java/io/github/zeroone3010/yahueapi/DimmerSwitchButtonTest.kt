@@ -1,31 +1,27 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import org.junit.jupiter.api.Test;
+import io.github.zeroone3010.yahueapi.DimmerSwitchButton.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
-import static io.github.zeroone3010.yahueapi.DimmerSwitchButton.DIM_DOWN;
-import static io.github.zeroone3010.yahueapi.DimmerSwitchButton.DIM_UP;
-import static io.github.zeroone3010.yahueapi.DimmerSwitchButton.OFF;
-import static io.github.zeroone3010.yahueapi.DimmerSwitchButton.ON;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-class DimmerSwitchButtonTest {
+internal class DimmerSwitchButtonTest {
   @Test
-  void shouldParseOn() {
-    assertEquals(ON, DimmerSwitchButton.parseFromButtonEventCode(1000));
+  fun shouldParseOn() {
+    assertEquals(ON, DimmerSwitchButton.parseFromButtonEventCode(1000))
   }
 
   @Test
-  void shouldParseDimUp() {
-    assertEquals(DIM_UP, DimmerSwitchButton.parseFromButtonEventCode(2000));
+  fun shouldParseDimUp() {
+    assertEquals(DIM_UP, DimmerSwitchButton.parseFromButtonEventCode(2000))
   }
 
   @Test
-  void shouldParseDimDown() {
-    assertEquals(DIM_DOWN, DimmerSwitchButton.parseFromButtonEventCode(3002));
+  fun shouldParseDimDown() {
+    assertEquals(DIM_DOWN, DimmerSwitchButton.parseFromButtonEventCode(3002))
   }
 
   @Test
-  void shouldParseOff() {
-    assertEquals(OFF, DimmerSwitchButton.parseFromButtonEventCode(4003));
+  fun shouldParseOff() {
+    assertEquals(OFF, DimmerSwitchButton.parseFromButtonEventCode(4003))
   }
 }

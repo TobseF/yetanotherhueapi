@@ -1,10 +1,10 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-public interface MotionSensor extends Sensor {
+interface MotionSensor : Sensor {
   /**
    * Whether presence has been detected.
    *
-   * @return {@code true} if presence detected, {@code false} if not.
+   * @return `true` if presence detected, `false` if not.
    */
-  boolean isPresence();
+  val isPresence: Boolean
 }

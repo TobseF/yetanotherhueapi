@@ -1,26 +1,16 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.JsonValue
 
-public enum StartupMode {
+enum class StartupMode(val apiValue: String) {
   BRIGHT_LIGHT("safety"),
   KEEP_STATE("powerfail"),
   LAST_ON_STATE("lastonstate"),
   CUSTOM("custom"),
   UNKNOWN("unknown");
 
-  private final String apiValue;
-
-  StartupMode(final String apiValue) {
-    this.apiValue = apiValue;
-  }
-
-  public String getApiValue() {
-    return apiValue;
-  }
-
   @JsonValue
-  public String jsonValue() {
-    return getApiValue();
+  fun jsonValue(): String {
+    return apiValue
   }
 }

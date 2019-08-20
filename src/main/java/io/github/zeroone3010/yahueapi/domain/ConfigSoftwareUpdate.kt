@@ -1,47 +1,22 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty
 
-public class ConfigSoftwareUpdate {
+class ConfigSoftwareUpdate {
   @JsonProperty("updatestate")
-  private int updateState;
+  val updateState: Int = 0
   @JsonProperty("checkforupdate")
-  private boolean checkForUpdate;
+  val isCheckForUpdate: Boolean = false
   @JsonProperty("devicetypes")
-  private DeviceTypes deviceTypes;
+  val deviceTypes: DeviceTypes? = null
   @JsonProperty("url")
-  private String url;
+  val url: String? = null
   @JsonProperty("text")
-  private String text;
+  val text: String? = null
   @JsonProperty("notify")
-  private boolean notify;
+  val isNotify: Boolean = false
 
-  public int getUpdateState() {
-    return updateState;
-  }
-
-  public boolean isCheckForUpdate() {
-    return checkForUpdate;
-  }
-
-  public DeviceTypes getDeviceTypes() {
-    return deviceTypes;
-  }
-
-  public String getUrl() {
-    return url;
-  }
-
-  public String getText() {
-    return text;
-  }
-
-  public boolean isNotify() {
-    return notify;
-  }
-
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

@@ -1,41 +1,16 @@
-package io.github.zeroone3010.yahueapi.domain;
+package io.github.zeroone3010.yahueapi.domain
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty
 
-public class WhiteListItem {
+class WhiteListItem {
   @JsonProperty("last use date")
-  private String lastUseDate;
+  var lastUseDate: String? = null
   @JsonProperty("create date")
-  private String createDate;
+  var createDate: String? = null
   @JsonProperty("name")
-  private String name;
+  var name: String? = null
 
-  public String getLastUseDate() {
-    return lastUseDate;
-  }
-
-  public void setLastUseDate(String lastUseDate) {
-    this.lastUseDate = lastUseDate;
-  }
-
-  public String getCreateDate() {
-    return createDate;
-  }
-
-  public void setCreateDate(String createDate) {
-    this.createDate = createDate;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  @Override
-  public String toString() {
-    return JsonStringUtil.toJsonString(this);
+  override fun toString(): String {
+    return JsonStringUtil.toJsonString(this)
   }
 }

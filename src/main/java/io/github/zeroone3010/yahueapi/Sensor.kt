@@ -1,33 +1,33 @@
-package io.github.zeroone3010.yahueapi;
+package io.github.zeroone3010.yahueapi
 
-import java.time.ZonedDateTime;
+import java.time.ZonedDateTime
 
-public interface Sensor {
+interface Sensor {
   /**
    * Returns the human readable name of the sensor.
    *
    * @return Name of the sensor.
    */
-  String getName();
+  val name: String?
 
   /**
    * Returns the id of the sensor, as assigned by the Bridge.
    *
    * @return The sensor id.
    */
-  String getId();
+  val id: String
 
   /**
    * Returns the type of the sensor.
    *
-   * @return The type of the sensor as a {@code SensorType} enumeration value.
+   * @return The type of the sensor as a `SensorType` enumeration value.
    */
-  SensorType getType();
+  val type: SensorType
 
   /**
    * Returns the last time the sensor status has been updated.
    *
    * @return The time when the sensor status was last updated.
    */
-  ZonedDateTime getLastUpdated();
+  val lastUpdated: ZonedDateTime
 }
