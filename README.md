@@ -9,7 +9,8 @@ The code is a fork of [ZeroOne3010/yetanotherhueapi](https://github.com/ZeroOne3
 ### The main advantages
  * Android Support - no `java.awt.Color` dependency
  * Plain Kotlin API without `Optionals`
- * Android API level 9 instead of 26 
+ * Compiles on Java 1.6
+ * Android API level 9 instead of 26
 
 ## Usage
 
@@ -110,6 +111,5 @@ See [CHANGELOG.md](CHANGELOG.md).
 Notes
 -----
 
-<sup>1</sup> Java 8, while old already, was chosen because it is easy to 
-install and run it on a Raspberry Pi computer. For the installation instructions,
-see, for example, [this blog post](http://wp.brodzinski.net/raspberry-pi-3b/install-latest-java-8-raspbian/).
+<sup>1</sup> Java 1.6, while old already, was chosen because it is easy to 
+install and run it on Android and a Raspberry Pi computer. 
