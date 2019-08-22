@@ -295,15 +295,24 @@ class Hue
      * @return A `CompletableFuture` with an API key for your application. You should store this key for future usage.
      * @since 1.0.0
      */
-    fun initializeApiConnection(appName: String): CompletableFuture<String?> {
-      return CompletableFuture.supplyAsync { geetApiKey(appName) }
+    fun initializeApiConnection(appName: String): CompletableFuture<String> {
+      return CompletableFuture.supplyAsync { this.initializeApiConnectionDirect(appName) }
     }
 
     companion object {
       private val MAX_TRIES = 30
     }
 
-    fun geetApiKey(appName: String): String? {
+    /**
+     * Returns an API
+     * key that you should use for any subsequent calls to the Bridge API.
+     *
+     * @param appName The name of your application.
+     * @return an API key for your application. You should store this key for future usage.
+     * @since 1.3.0
+     * @see initializeApiConnection(appName: String)
+     */
+    fun initializeApiConnectionDirect(appName: String): String {
 
       val body = "{\"devicetype\":\"yetanotherhueapi#$appName\"}"
       val baseUrl: URL
@@ -314,7 +323,7 @@ class Hue
       }
 
       var latestError: String? = null
-      for (triesLeft in HueBridgeConnectionBuilder.MAX_TRIES downTo 1) {
+      for (triesLeft in MAX_TRIES downTo 1) {
         try {
           println("Please push the button on the Hue Bridge now ($triesLeft seconds left).")
 
@@ -325,7 +334,7 @@ class Hue
 
               })[0]
           status.success?.let {
-            return it.username
+            return it.username ?: throw HueApiException("ApiInitializationSuccess was empty")
           }
 
 

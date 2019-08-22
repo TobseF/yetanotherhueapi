@@ -449,12 +449,11 @@ class Color {
      * @see .toString
      */
     fun valueOf(hex: String): Color {
-      var hex = hex
-      hex = if (hex[0] == '#') hex.substring(1) else hex
-      val r = Integer.valueOf(hex.substring(0, 2), 16)
-      val g = Integer.valueOf(hex.substring(2, 4), 16)
-      val b = Integer.valueOf(hex.substring(4, 6), 16)
-      val a = if (hex.length != 8) 255 else Integer.valueOf(hex.substring(6, 8), 16)
+      val plainHex = if (hex[0] == '#') hex.substring(1) else hex
+      val r = Integer.valueOf(plainHex.substring(0, 2), 16)
+      val g = Integer.valueOf(plainHex.substring(2, 4), 16)
+      val b = Integer.valueOf(plainHex.substring(4, 6), 16)
+      val a = if (plainHex.length != 8) 255 else Integer.valueOf(hex.substring(6, 8), 16)
       return Color(r / 255f, g / 255f, b / 255f, a / 255f)
     }
 
