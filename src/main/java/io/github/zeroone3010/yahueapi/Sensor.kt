@@ -1,6 +1,6 @@
 package io.github.zeroone3010.yahueapi
 
-import java.time.ZonedDateTime
+import java.util.*
 
 interface Sensor {
   /**
@@ -29,5 +29,5 @@ interface Sensor {
    *
    * @return The time when the sensor status was last updated.
    */
-  val lastUpdated: ZonedDateTime
+  val lastUpdated: Date
 }

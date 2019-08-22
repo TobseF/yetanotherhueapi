@@ -15,14 +15,12 @@ import org.junit.jupiter.api.Test
 import java.io.File
 import java.io.IOException
 import java.math.BigDecimal
-import java.nio.file.Files
-import java.time.*
 import java.util.*
-import java.util.stream.Collectors
+import kotlin.math.abs
 
 internal class HueTest {
 
-  val wireMockServer = WireMockServer(wireMockConfig().dynamicPort())
+  private val wireMockServer = WireMockServer(wireMockConfig().dynamicPort())
 
   @BeforeEach
   fun startServer() {
@@ -277,8 +275,8 @@ internal class HueTest {
   fun testMotionSensorLastUpdated() {
     val hue = createHueAndInitializeMockServer()
     val actual = hue.getMotionSensorByName(MOTION_SENSOR_NAME)!!.lastUpdated
-    val expected = ZonedDateTime.of(LocalDate.of(2018, Month.JULY, 29),
-        LocalTime.of(6, 6, 6), ZoneId.of("UTC"))
+
+    val expected = getDateUTC(2018, 7, 29, 6, 6, 6)
     assertEquals(expected, actual)
   }
 
@@ -308,8 +306,9 @@ internal class HueTest {
   fun testDimmerSwitchLastUpdated() {
     val hue = createHueAndInitializeMockServer()
     val actual = hue.getDimmerSwitchByName(DIMMER_SWITCH_NAME)!!.lastUpdated
-    val expected = ZonedDateTime.of(LocalDate.of(2018, Month.JULY, 28),
-        LocalTime.of(21, 12, 0), ZoneId.of("UTC"))
+
+    val expected = getDateUTC(2018, Calendar.JULY, 28, 21, 12, 0)
+
     assertEquals(expected, actual)
   }
 
@@ -572,7 +571,7 @@ internal class HueTest {
     val classLoader = javaClass.classLoader
     val file = File(classLoader.getResource(fileName)!!.file)
     try {
-      return Files.lines(file.toPath()).collect(Collectors.joining())
+      return file.readText()
     } catch (e: IOException) {
       throw RuntimeException(e)
     }
@@ -585,5 +584,16 @@ internal class HueTest {
     private val MOTION_SENSOR_NAME = "Hallway sensor"
     private val TEMPERATURE_SENSOR_NAME = "Hue temperature sensor 1"
     private val DIMMER_SWITCH_NAME = "Living room door"
+  }
+
+  private fun assertEquals(dateA: Date, dateB: Date) {
+    assertTrue(abs(dateA.time - dateA.time) < 1000, "Dates are not equal\n$dateA\n$dateB")
+  }
+
+  private fun getDateUTC(year: Int, month: Int, date: Int, hourOfDay: Int, minute: Int, second: Int): Date {
+    return Calendar.getInstance().apply {
+      set(year, month, date, hourOfDay, minute, second)
+      setTimeZone(TimeZone.getTimeZone("UTC"))
+    }.time
   }
 }

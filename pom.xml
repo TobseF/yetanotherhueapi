@@ -168,6 +168,8 @@
                 </executions>
                 <configuration>
                     <jvmTarget>1.6</jvmTarget>
+                    <!-- Provide a path to a JDK 1.6 -->
+                    <jdkHome>${env.JAVA_6_HOME}</jdkHome>
                 </configuration>
             </plugin>
             <plugin>

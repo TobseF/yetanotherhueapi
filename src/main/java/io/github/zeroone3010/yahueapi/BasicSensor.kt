@@ -2,15 +2,18 @@ package io.github.zeroone3010.yahueapi
 
 import io.github.zeroone3010.yahueapi.domain.SensorDto
 import java.net.URL
-import java.time.ZonedDateTime
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.logging.Logger
 
 internal open class BasicSensor(override val id: String, sensor: SensorDto?, protected val baseUrl: URL, private val stateProvider: () -> Map<String, Any>?) : Sensor {
   override val name: String?
   override val type: SensorType
 
-  override val lastUpdated: ZonedDateTime
-    get() = ZonedDateTime.parse(readStateValue("lastupdated", String::class.java) + UTC_SUFFIX)
+  private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").apply { timeZone = TimeZone.getTimeZone("UTC") }
+
+  override val lastUpdated: Date
+    get() = dateFormat.parse(readStateValue("lastupdated", String::class.java))
 
   init {
     if (sensor == null) {

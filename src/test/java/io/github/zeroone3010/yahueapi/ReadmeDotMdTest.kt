@@ -42,8 +42,7 @@ internal class ReadmeDotMdTest {
     var codeBlockNumber = 0
     var checkedExceptions: String? = null
 
-    val lines = BufferedReader(InputStreamReader(readmeDotMdLocation.openStream()))
-        .lines()
+    val lines = BufferedReader(InputStreamReader(readmeDotMdLocation.openStream())).readLines()
     val codeBlocks = LinkedHashMap<String, String>()
     val importStatements = ArrayList<String>()
     for (line in lines) {

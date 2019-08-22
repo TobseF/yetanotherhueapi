@@ -6,7 +6,6 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.stream.Collectors
 
 internal object HttpUtil {
 
@@ -31,7 +30,7 @@ internal object HttpUtil {
         }
       }
       connection.connect()
-      BufferedReader(InputStreamReader(connection.inputStream)).use { reader -> return reader.lines().collect(Collectors.joining("\n")) }
+      BufferedReader(InputStreamReader(connection.inputStream)).use { reader -> return reader.lineSequence().joinToString("\n") }
     } catch (e: IOException) {
       throw HueApiException(e)
     }

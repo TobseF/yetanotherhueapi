@@ -10,7 +10,6 @@ import java.io.IOException
 import java.net.MalformedURLException
 import java.net.URL
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
 class Hue
@@ -287,18 +286,6 @@ class Hue
 
   class HueBridgeConnectionBuilder constructor(private val bridgeIp: String) {
 
-    /**
-     * Returns a `CompletableFuture` that completes once you push the button on the Hue Bridge. Returns an API
-     * key that you should use for any subsequent calls to the Bridge API.
-     *
-     * @param appName The name of your application.
-     * @return A `CompletableFuture` with an API key for your application. You should store this key for future usage.
-     * @since 1.0.0
-     */
-    fun initializeApiConnection(appName: String): CompletableFuture<String> {
-      return CompletableFuture.supplyAsync { this.initializeApiConnectionDirect(appName) }
-    }
-
     companion object {
       private val MAX_TRIES = 30
     }
@@ -312,7 +299,7 @@ class Hue
      * @since 1.3.0
      * @see initializeApiConnection(appName: String)
      */
-    fun initializeApiConnectionDirect(appName: String): String {
+    fun initializeApiConnection(appName: String): String {
 
       val body = "{\"devicetype\":\"yetanotherhueapi#$appName\"}"
       val baseUrl: URL
