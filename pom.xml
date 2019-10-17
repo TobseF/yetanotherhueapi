@@ -80,8 +80,8 @@
                     <includes>
                         <include>**/*</include>
                     </includes>
-                    <repositoryName>yetanotherhueapi</repositoryName>
-                    <repositoryOwner>tobsef</repositoryOwner>
+                    <repositoryName>MavenRepository</repositoryName>
+                    <repositoryOwner>TobseF</repositoryOwner>
                 </configuration>
                 <executions>
                     <execution>
