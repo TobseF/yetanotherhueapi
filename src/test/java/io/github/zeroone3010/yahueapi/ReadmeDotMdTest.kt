@@ -1,8 +1,8 @@
 package io.github.zeroone3010.yahueapi
 
-import org.junit.Ignore
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.io.*
 import java.net.URL
@@ -16,7 +16,7 @@ internal class ReadmeDotMdTest {
     CODE, IMPORTS, NONE
   }
 
-  @Ignore
+  @Disabled
   @Test
   @Throws(IOException::class)
   fun verifyExamplesOnReadmeDotMdCanBeCompiled() {
