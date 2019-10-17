@@ -190,14 +190,6 @@
         </plugins>
     </build>
 
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <name>MavenRepository</name>
-            <url>https://maven.pkg.github.com/</url>
-        </repository>
-    </distributionManagement>
-
     <scm>
         <connection>scm:git:git://github.com/ZeroOne3010/yetanotherhueapi.git</connection>
         <developerConnection>scm:git:git@github.com:ZeroOne3010/yetanotherhueapi.git</developerConnection>
