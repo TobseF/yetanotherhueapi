@@ -18,4 +18,4 @@ jobs:
     - name: Build with Maven
       run: mvn -B package --file pom.xml
     - name: Deploy to Github Package Registry
-        run: mvn --settings settings.xml --file pom.xml deploy
+      run: mvn --settings settings.xml --file pom.xml deploy
