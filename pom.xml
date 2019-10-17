@@ -190,7 +190,7 @@
         <repository>
             <id>github</id>
             <name>GitHub OWNER Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/tobsef/yetanotheryueapi</url>
+            <url>https://maven.pkg.github.com/</url>
         </repository>
     </distributionManagement>
 
